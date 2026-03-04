@@ -2,6 +2,12 @@
 
 Standalone browser build of Tritonet Brainwave.
 
+## Screenshot
+
+![Tritonet Brainwave UI](docs/screenshot.png)
+
+Place your screenshot image at `docs/screenshot.png` to render it here on GitHub.
+
 ## Run locally
 
 Use a local HTTP server (recommended for browser permissions and stable asset behavior):

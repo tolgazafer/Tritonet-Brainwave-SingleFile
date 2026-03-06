@@ -21,6 +21,17 @@ Then open:
 
 - http://localhost:8080/Tritonet_Brainwave_SingleFile.html
 
+## Rebuild the single file
+
+If you update source code and want to re-inline dependencies into one artifact:
+
+```bash
+cd /path/to/Tritonet\ JavaScript
+python3 build_single_file.py
+```
+
+This updates `Tritonet_Brainwave_SingleFile.html` and inlines `p5.js` so the app no longer depends on a CDN script tag.
+
 ## Browser notes
 
 - Use Chrome or Safari.
@@ -30,4 +41,5 @@ Then open:
 ## Repository contents
 
 - `Tritonet_Brainwave_SingleFile.html`: self-contained application build.
+- `build_single_file.py`: inlines `p5.js` into the single-file build artifact.
 - `.gitignore`: excludes local environment and source folders from this single-file repo.

@@ -1,0 +1,30 @@
+{
+  "id": "lesson_01_basics",
+  "title": "The Circle of Fifths — Basics",
+  "level": "beginner",
+  "topics": ["circle-of-fifths", "keys", "intervals"],
+  "intro": "Welcome to Tritonet! In this lesson you will explore the Circle of Fifths and understand how keys relate to each other. The Tritonet circle shows all 12 tones. Let's begin.",
+  "steps": [
+    {
+      "text": "Look at the Tritonet circle. Each position represents a semitone. The highlighted position is the current root note (key center). Press any note on the circle to select a new key.",
+      "hint": "You can also press keys 1–6 on your keyboard to trigger chords.",
+      "tritonet": { "look": "simple" }
+    },
+    {
+      "text": "The 'anchor' (the fixed point on the circle) determines the relationship between the root and the scale. Try moving the anchor by clicking the inner ring segments.",
+      "hint": "The anchor controls whether you hear a major, minor, or modal sound."
+    },
+    {
+      "text": "Now switch to the Calculator view using the view selector at the bottom of the canvas. This view shows note names around the circle, making it easier to read intervals.",
+      "tritonet": { "look": "calculator" }
+    },
+    {
+      "text": "Great! Try playing the same chord in a few different keys. Notice how the visual pattern stays the same — only the names change. This is the power of the Tritonet system.",
+      "hint": "Move the root by clicking different positions on the outer ring."
+    },
+    {
+      "text": "Lesson complete! You have explored the basics of the Tritonet interface. Next: try the Mundana (Zodiac) view for an astronomical perspective on harmony.",
+      "tritonet": { "look": "simple" }
+    }
+  ]
+}

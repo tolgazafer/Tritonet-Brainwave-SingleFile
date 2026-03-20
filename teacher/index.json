@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "lessons": [
+    {
+      "id": "lesson_01_basics",
+      "file": "lesson_01_basics.json",
+      "title": "The Circle of Fifths — Basics",
+      "level": "beginner",
+      "topics": ["circle-of-fifths", "keys", "intervals"]
+    }
+  ]
+}

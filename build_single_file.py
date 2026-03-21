@@ -21,8 +21,8 @@ import urllib.request
 # ---------------------------------------------------------------------------
 # CDN URLs
 # ---------------------------------------------------------------------------
-P5_URL    = "https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"
-P5SND_URL = "https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"
+P5_URL = "https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"
+# p5.sound is NOT used — app uses Web Audio API directly.
 
 # ---------------------------------------------------------------------------
 # JS module load order  (must match index.html)
@@ -72,6 +72,21 @@ def concatenate_modules(js_dir: pathlib.Path) -> str:
     return "\n\n".join(parts)
 
 
+def extract_embedded_fonts(singlefile_path: pathlib.Path) -> str:
+    """Extract @font-face declarations from the old single-file HTML's <style> block."""
+    if not singlefile_path.exists():
+        return ""
+    html = singlefile_path.read_text(encoding="utf-8")
+    font_re = re.compile(
+        r'(@font-face\s*\{[^}]*font-family:\s*[\'"](?:Metdemo|Tritonet)Embedded[\'"][^}]*\})',
+        re.DOTALL | re.IGNORECASE,
+    )
+    fonts = font_re.findall(html)
+    if fonts:
+        return "\n".join(fonts)
+    return ""
+
+
 def extract_embedded_assets(singlefile_path: pathlib.Path) -> str:
     """
     Pull the hidden <img> asset block out of the old single-file HTML so that
@@ -118,21 +133,18 @@ def inline_cdn_tag(html: str, cdn_url: str, js_code: str) -> str:
 
 def inline_module_loader(html: str, concatenated_js: str) -> str:
     """
-    Replace the dynamic module-loader <script> block with a single inlined
-    <script> containing all concatenated JS modules.
-
-    The loader block starts with a line containing 'const _modules = [' and is
-    wrapped in the nearest enclosing <script>…</script>.
+    Replace the <!-- BUILD:JS-START --> … <!-- BUILD:JS-END --> block
+    (which contains the static <script src="js/..."> tags) with a single
+    inlined <script id="app-js"> containing all concatenated JS modules.
     """
-    # Greedily match the script block that contains the module loader sentinel
     pattern = re.compile(
-        r'<script>\s*(?://[^\n]*\n\s*)?const _v\s*=.*?</script>',
+        r'<!--\s*BUILD:JS-START\s*-->.*?<!--\s*BUILD:JS-END\s*-->',
         re.DOTALL,
     )
     replacement = f'<script id="app-js">\n{concatenated_js}\n</script>'
     result, n = pattern.subn(lambda _m: replacement, html, count=1)
     if n == 0:
-        print("  WARNING: module-loader block not found in template. Appending JS before </body>.")
+        print("  WARNING: BUILD:JS-START marker not found. Appending JS before </body>.")
         result = html.replace(
             "</body>",
             f'<script id="app-js">\n{concatenated_js}\n</script>\n</body>',
@@ -169,32 +181,40 @@ def main() -> int:
     html = template_path.read_text(encoding="utf-8")
     print(f"Template: {template_path}  ({len(html):,} chars)")
 
-    # 2. Fetch / cache CDN libraries
+    # 2. Fetch / cache p5.js (p5.sound is NOT used — app uses Web Audio API)
     print("\nFetching CDN libraries …")
-    p5_code  = fetch_and_cache(P5_URL,    ".cache/p5.min.js")
-    snd_code = fetch_and_cache(P5SND_URL, ".cache/p5.sound.min.js")
-    print(f"  p5.js       {len(p5_code):,} chars")
-    print(f"  p5.sound.js {len(snd_code):,} chars")
+    p5_code  = fetch_and_cache(P5_URL, ".cache/p5.min.js")
+    print(f"  p5.js  {len(p5_code):,} chars")
 
     # 3. Concatenate JS modules
     print("\nConcatenating JS modules …")
     app_js = concatenate_modules(js_dir)
     print(f"  Total app JS: {len(app_js):,} chars")
 
-    # 4. Inline p5.js and p5.sound.js
+    # 4. Inline p5.js only
     print("\nInlining CDN scripts …")
-    html = inline_cdn_tag(html, P5_URL,    p5_code)
-    html = inline_cdn_tag(html, P5SND_URL, snd_code)
+    html = inline_cdn_tag(html, P5_URL, p5_code)
+    # Remove the p5.sound comment line (not a real script tag, just a comment)
+    html = html.replace(
+        "  <!-- p5.sound is NOT used — the app uses Web Audio API directly -->", ""
+    )
 
     # 5. Replace module loader with concatenated JS
     print("Inlining app JS …")
     html = inline_module_loader(html, app_js)
 
-    # 6. Extract and insert embedded asset tags from old single-file
+    # 6a. Extract and inject embedded @font-face CSS from old single-file
+    font_css = extract_embedded_fonts(singlefile_path)
+    if font_css:
+        html = html.replace("</style>", f"\n    /* === EMBEDDED FONTS === */\n    {font_css}\n  </style>", 1)
+        print(f"  Embedded fonts CSS: {len(font_css):,} chars")
+    else:
+        print("  No embedded fonts found.")
+
+    # 6b. Extract and insert embedded asset <img> tags from old single-file
     assets_block = extract_embedded_assets(singlefile_path)
     if assets_block:
-        # Insert immediately after <body>
-        html = html.replace("<body>", f"<body>\n<!-- EMBEDDED ASSETS -->\n{assets_block}\n<!-- /EMBEDDED ASSETS -->", 1)
+        html = html.replace("</head>\n<body>", f"</head>\n<body>\n<!-- EMBEDDED ASSETS -->\n{assets_block}\n<!-- /EMBEDDED ASSETS -->", 1)
         print(f"  Embedded assets block: {len(assets_block):,} chars")
     else:
         print("  No embedded assets found (images will load from file paths).")

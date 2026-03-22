@@ -6047,12 +6047,16 @@ function setupMainMidiOutDropdown() {
   let midiOutSelect = document.getElementById('main-midiout-select');
   if (!midiOutSelect) return;
 
-  // Request MIDI permission only the first time the user clicks the dropdown.
-  midiOutSelect.addEventListener('mousedown', function () {
-    if (!midiAccess) initMIDI();
-  });
-
   midiOutSelect.addEventListener('change', function () {
+    // If MIDI not yet initialised and user selected the "Connect MIDI..." placeholder,
+    // kick off MIDI init and immediately reset the visible selection to None.
+    if (!midiAccess && this.value === '_connect_') {
+      this.value = '0';
+      channelVariables[channel].midiout = 0;
+      initMIDI();
+      return;
+    }
+
     let selectedIndex = parseInt(this.value, 10);
     if (Number.isNaN(selectedIndex)) return;
     selectedIndex = Math.max(0, Math.min(midioutdevices - 1, selectedIndex));
@@ -6111,6 +6115,22 @@ function syncMainMidiOutDropdownOptions(forceRefresh = false) {
   if (!midiOutSelect) return;
 
   refreshMidiOutputDevicesList();
+
+  // Before MIDI access is granted, show a single "Connect MIDI output..."
+  // placeholder so the user can deliberately trigger MIDI initialisation.
+  if (!midiAccess) {
+    const placeholder = 'None|_connect_:Connect MIDI output...';
+    if (!forceRefresh && midiOutSelect.dataset.signature === placeholder) return;
+    midiOutSelect.innerHTML = '';
+    const noneOpt = document.createElement('option');
+    noneOpt.value = '0'; noneOpt.textContent = 'None';
+    midiOutSelect.appendChild(noneOpt);
+    const connectOpt = document.createElement('option');
+    connectOpt.value = '_connect_'; connectOpt.textContent = 'Connect MIDI output...';
+    midiOutSelect.appendChild(connectOpt);
+    midiOutSelect.dataset.signature = placeholder;
+    return;
+  }
 
   let deviceNames = (Array.isArray(outDevices) && outDevices.length > 0) ? outDevices : ["None"];
   let optionsSignature = deviceNames.join('|');

@@ -1955,10 +1955,10 @@ async function initMIDI() {
     return;
   }
 
-  if (!window.isSecureContext || location.protocol === 'file:') {
-    console.warn("Web MIDI requires a secure context. Open via http://localhost (or https), not file://");
+  if (!window.isSecureContext) {
+    console.warn("Web MIDI requires a secure context (https or localhost).");
     outDevices = [INTERNAL_OUTPUT_NAME];
-    inDevices = ["Run on localhost"];
+    inDevices = ["Needs secure context"];
     midioutdevices = 1;
     midiindevices = 1;
     setMidiOutput(0);
@@ -6059,7 +6059,7 @@ function setupMainMidiOutDropdown() {
 async function ensureMidiAccessForOutputRefresh() {
   if (midiAccess) return;
   if (!navigator.requestMIDIAccess) return;
-  if (!window.isSecureContext || location.protocol === 'file:') return;
+  if (!window.isSecureContext) return;
 
   try {
     midiAccess = await navigator.requestMIDIAccess({ sysex: false });
@@ -6067,6 +6067,7 @@ async function ensureMidiAccessForOutputRefresh() {
       assignDefaultMidiPorts();
     };
     assignDefaultMidiPorts();
+    syncMainMidiOutDropdownOptions(true);
   } catch (e) {
     console.warn('MIDI access refresh failed:', e);
   }
@@ -6115,13 +6116,25 @@ function syncMainMidiOutDropdownOptions(forceRefresh = false) {
   midiOutSelect.dataset.signature = optionsSignature;
 }
 
+let _midiOutPanelWasOpen = false;
 function positionMainMidiOutDropdown() {
   let wrapper = document.getElementById('main-midiout-wrapper');
   if (!wrapper) return;
 
   if (!screenswitch) {
     wrapper.style.display = 'none';
+    _midiOutPanelWasOpen = false;
     return;
+  }
+
+  // Refresh device list the first time the panel becomes visible each open
+  if (!_midiOutPanelWasOpen) {
+    _midiOutPanelWasOpen = true;
+    if (!midiAccess) {
+      ensureMidiAccessForOutputRefresh();
+    } else {
+      syncMainMidiOutDropdownOptions(true);
+    }
   }
 
   wrapper.style.display = 'flex';

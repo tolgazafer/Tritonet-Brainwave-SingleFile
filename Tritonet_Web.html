@@ -33,21 +33,25 @@
       margin: 0;
       padding: 0;
       background: #111;
+      overflow: hidden;
     }
 
-    /* Outer full-screen shell */
+    /* Outer full-screen shell — fills viewport */
     #tritonet-shell {
       display: flex;
       flex-direction: column;
-      width: 1450px;   /* 1100 canvas + 350 teacher */
+      width: 100vw;
+      height: 100vh;
       background: #000;
+      overflow: hidden;
     }
 
-    /* Main row: canvas + teacher panel (fixed sizes, no flex stretching) */
+    /* Main row: canvas fixed + teacher panel fills remaining space */
     #tritonet-main-row {
       display: flex;
       flex-direction: row;
-      height: 734px;   /* exact canvas height */
+      height: 734px;
+      flex-shrink: 0;
     }
 
     /* p5.js canvas host — fixed to match createCanvas(1100, 734) */
@@ -58,31 +62,35 @@
       height: 734px;
       overflow: hidden;
       background: #000;
+      flex-shrink: 0;
     }
     #tritonet-app canvas {
       display: block;
     }
 
-    /* ====== TEACHER PANEL (right) ======================================== */
+    /* ====== TEACHER PANEL (right) — fills remaining width ================ */
     #teacher-panel {
-      width: 350px;
-      min-width: 350px;
+      flex: 1;
+      min-width: 200px;
       height: 734px;
-      background: var(--panel-group-bg);
-      color: var(--panel-text);
+      background: #c8c8c8;
+      color: #333;
       font-family: var(--panel-font);
       font-size: var(--panel-font-size);
       display: flex;
       flex-direction: column;
-      border-left: 1px solid var(--panel-ctrl-border);
+      border-left: 1px solid #aaa;
       overflow: hidden;
     }
     #teacher-panel-header {
-      background: var(--panel-header-bg);
-      padding: 8px 12px;
-      font-weight: bold;
+      background: #c8c8c8;
+      padding: 16px 12px 8px;
+      font-weight: normal;
       font-size: 13px;
+      color: #444;
       flex-shrink: 0;
+      text-align: center;
+      letter-spacing: 0.02em;
     }
     #teacher-chat {
       flex: 1;
@@ -90,43 +98,82 @@
       padding: 10px;
       font-size: 11px;
       line-height: 1.5;
+      color: #555;
     }
     #teacher-input-row {
       display: flex;
-      gap: 4px;
-      padding: 8px;
-      border-top: 1px solid var(--panel-ctrl-border);
+      flex-direction: column;
+      gap: 0;
+      padding: 12px 12px 16px;
       flex-shrink: 0;
     }
-    #teacher-input {
-      flex: 1;
-      background: var(--panel-bg);
-      border: 1px solid var(--panel-ctrl-border);
-      color: var(--panel-text);
-      padding: 4px 6px;
-      border-radius: 4px;
+    #teacher-prompt-label {
       font-size: 11px;
+      color: #555;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+    #teacher-input {
+      width: 100%;
+      box-sizing: border-box;
+      background: #d8d8d8;
+      border: 1px solid #aaa;
+      color: #333;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-family: var(--panel-font);
+      outline: none;
+    }
+    #teacher-input::placeholder {
+      color: #888;
     }
     #teacher-send-btn {
-      background: var(--panel-ctrl-bg);
-      border: 1px solid var(--panel-ctrl-border);
-      color: #1f2128;
-      padding: 4px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 11px;
-      font-weight: bold;
+      display: none;
     }
 
     /* ====== PATTERN STRIP (bottom) ======================================= */
     #pattern-strip {
       display: flex;
-      height: 140px;
-      min-height: 140px;
+      flex-direction: row;
+      flex: 1;
       background: var(--panel-bg);
       border-top: 1px solid var(--panel-ctrl-border);
       overflow: hidden;
+      min-height: 0;
     }
+
+    /* Narrow Seq / Gen toggle sidebar */
+    #seq-gen-sidebar {
+      width: 62px;
+      min-width: 62px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      border-right: 1px solid var(--panel-ctrl-border);
+      background: var(--panel-header-bg);
+      flex-shrink: 0;
+    }
+    .seq-gen-btn {
+      width: 44px;
+      height: 28px;
+      background: var(--panel-group-bg);
+      border: 1px solid var(--panel-ctrl-border);
+      color: var(--panel-text);
+      font-size: 11px;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: center;
+      line-height: 28px;
+      user-select: none;
+      font-family: var(--panel-font);
+    }
+    .seq-gen-btn:hover { background: var(--panel-bg); }
+    .seq-gen-btn.active { background: var(--panel-toggle-on); }
+
     .pattern-gen {
       flex: 1;
       display: flex;
@@ -155,6 +202,171 @@
       color: var(--panel-label);
       font-style: italic;
       font-size: 10px;
+    }
+
+    /* Gen panels wrapper */
+    #gen-panels {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    /* ====== SEQUENCER PANEL ============================================== */
+    #sequencer-panel {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+    }
+    #seq-transport {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-bottom: 1px solid var(--panel-ctrl-border);
+      flex-shrink: 0;
+      background: var(--panel-group-bg);
+    }
+    #seq-transport label {
+      font-size: 11px;
+      color: var(--panel-label);
+    }
+    #seq-transport .seq-title {
+      margin-left: auto;
+      font-size: 10px;
+      color: var(--panel-label);
+      font-style: italic;
+    }
+    #seq-tempo-input {
+      width: 52px;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-ctrl-border);
+      color: var(--panel-text);
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: var(--panel-font);
+    }
+    #seq-play-btn.active {
+      background: var(--panel-toggle-on);
+      color: #fff;
+    }
+    #seq-steps-row {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      overflow-x: auto;
+      padding: 5px 8px;
+      gap: 3px;
+    }
+    .seq-step-cell {
+      flex: 1;
+      min-width: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--panel-ctrl-border);
+      border-radius: 4px;
+      background: var(--panel-group-bg);
+      padding: 3px 2px;
+      cursor: pointer;
+      user-select: none;
+      gap: 2px;
+      transition: background 0.1s;
+    }
+    .seq-step-cell:hover {
+      background: var(--panel-header-bg);
+    }
+    .seq-step-cell.active {
+      background: var(--panel-toggle-on);
+      border-color: #3a6a3a;
+    }
+    .seq-step-cell.playing {
+      background: #4A6A7A;
+      border-color: #3a5a6a;
+    }
+    .seq-step-num {
+      font-size: 9px;
+      color: var(--panel-label);
+      font-family: var(--panel-font);
+      line-height: 1;
+    }
+    .seq-step-cell.active .seq-step-num {
+      color: #cfc;
+    }
+    .seq-step-chord {
+      font-size: 9px;
+      color: var(--panel-text);
+      font-family: var(--panel-font);
+      text-align: center;
+      line-height: 1.2;
+      min-height: 10px;
+    }
+
+    /* ====== BOTTOM FOOTER BAR ============================================ */
+    #bottom-footer {
+      display: flex;
+      flex-direction: row;
+      height: 110px;
+      min-height: 110px;
+      flex-shrink: 0;
+      background: var(--panel-bg);
+      border-top: 1px solid var(--panel-ctrl-border);
+    }
+    #footer-keyboard {
+      flex: 3;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--panel-ctrl-border);
+      overflow: hidden;
+    }
+    #kb-piano-wrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    .kb-white {
+      position: absolute;
+      top: 0;
+      background: #e8e8e8;
+      border: 1px solid #555;
+      border-top: none;
+      border-radius: 0 0 3px 3px;
+      box-sizing: border-box;
+    }
+    .kb-black {
+      position: absolute;
+      top: 0;
+      background: #111;
+      border: 1px solid #000;
+      border-top: none;
+      border-radius: 0 0 2px 2px;
+      box-sizing: border-box;
+      z-index: 2;
+    }
+    .kb-white.kb-on { background: var(--panel-ctrl-bg); }
+    .kb-black.kb-on { background: var(--panel-ctrl-bg); filter: brightness(0.7); }
+    #footer-reverb {
+      flex: 1;
+      min-width: 200px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--panel-label);
+      font-family: var(--panel-font);
+      font-size: 11px;
+      gap: 4px;
+    }
+    #footer-reverb span {
+      color: var(--panel-text);
+      font-weight: bold;
+      font-size: 12px;
     }
 
     /* ====== GUI PANEL (side panel, themed) ================================ */
@@ -552,6 +764,7 @@
             <option value="simple">Abacus</option>
             <option value="calculator">Calculator</option>
             <option value="zodiac">Mundana</option>
+            <option value="test1">Test 1</option>
           </select>
         </div>
 
@@ -571,14 +784,11 @@
 
       <!-- AI Teacher Panel (right) -->
       <div id="teacher-panel">
-        <div id="teacher-panel-header">AI Teacher</div>
-        <div id="teacher-chat">
-          <div style="color:var(--panel-label); font-style:italic; font-size:11px; margin-top:20px; text-align:center;">
-            Teacher coming soon.<br>Lessons load from the teacher/ folder.
-          </div>
-        </div>
+        <div id="teacher-panel-header">Ai Teacher</div>
+        <div id="teacher-chat"></div>
         <div id="teacher-input-row">
-          <input type="text" id="teacher-input" placeholder="Ask the teacher...">
+          <div id="teacher-prompt-label">Prompt Area</div>
+          <input type="text" id="teacher-input" placeholder="Ask the teacher..." onkeydown="if(event.key==='Enter')teacherSend()">
           <button id="teacher-send-btn" onclick="teacherSend()">Ask</button>
         </div>
       </div>
@@ -587,21 +797,59 @@
 
     <!-- Pattern Generator Strip (bottom) -->
     <div id="pattern-strip">
-      <div class="pattern-gen" id="pg-1">
-        <div class="pattern-gen-header">Pattern Generator 1</div>
-        <div class="pattern-gen-body">Scaffold — coming soon</div>
+
+      <!-- Seq / Gen toggle sidebar (radio buttons — Gen is default) -->
+      <div id="seq-gen-sidebar">
+        <div class="seq-gen-btn" id="seq-btn" title="Sequencer" onclick="seqGenSwitch('seq')">Seq</div>
+        <div class="seq-gen-btn active" id="gen-btn" title="Generator" onclick="seqGenSwitch('gen')">Gen</div>
       </div>
-      <div class="pattern-gen" id="pg-2">
-        <div class="pattern-gen-header">Pattern Generator 2</div>
-        <div class="pattern-gen-body">Scaffold — coming soon</div>
+
+      <!-- Gen view: 4 generator panels -->
+      <div id="gen-panels">
+        <div class="pattern-gen" id="pg-1">
+          <div class="pattern-gen-header">Generator 1</div>
+          <div class="pattern-gen-body">Scaffold — coming soon</div>
+        </div>
+        <div class="pattern-gen" id="pg-2">
+          <div class="pattern-gen-header">Generator 2</div>
+          <div class="pattern-gen-body">Scaffold — coming soon</div>
+        </div>
+        <div class="pattern-gen" id="pg-3">
+          <div class="pattern-gen-header">Generator 3</div>
+          <div class="pattern-gen-body">Scaffold — coming soon</div>
+        </div>
+        <div class="pattern-gen" id="pg-4">
+          <div class="pattern-gen-header">Generator 4</div>
+          <div class="pattern-gen-body">Scaffold — coming soon</div>
+        </div>
       </div>
-      <div class="pattern-gen" id="pg-3">
-        <div class="pattern-gen-header">Pattern Generator 3</div>
-        <div class="pattern-gen-body">Scaffold — coming soon</div>
+
+      <!-- Seq view: Sequencer panel (hidden by default) -->
+      <div id="sequencer-panel">
+        <div id="seq-transport">
+          <button class="gui-btn" id="seq-play-btn" onclick="seqUIPlay()">&#9654; Play</button>
+          <button class="gui-btn" id="seq-stop-btn" onclick="seqUIStop()">&#9632; Stop</button>
+          <button class="gui-btn" onclick="seqUIReset()">&#8635; Reset</button>
+          <label for="seq-tempo-input" style="margin-left:10px;">BPM</label>
+          <input type="number" id="seq-tempo-input" value="120" min="20" max="300"
+                 oninput="seqSetTempo(+this.value)">
+          <span class="seq-title">Sequencer &mdash; 16 steps</span>
+        </div>
+        <div id="seq-steps-row">
+          <!-- Step cells built by seqUIBuildSteps() -->
+        </div>
       </div>
-      <div class="pattern-gen" id="pg-4">
-        <div class="pattern-gen-header">Pattern Generator 4</div>
-        <div class="pattern-gen-body">Scaffold — coming soon</div>
+
+    </div>
+
+    <!-- Bottom Footer Bar -->
+    <div id="bottom-footer">
+      <div id="footer-keyboard">
+        <div id="kb-piano-wrap"></div>
+      </div>
+      <div id="footer-reverb">
+        <span>Reverb &nbsp;·&nbsp; Delay &nbsp;·&nbsp; Sends</span>
+        Volume
       </div>
     </div>
 
@@ -784,6 +1032,43 @@ const VIEW_THEMES = {
       ctrlBorder:  PanelBorder,
       toggleOn:    ToggleOn,
       toggleErr:   ToggleErr,
+      font:        'Arial, sans-serif',
+      fontSize:    '12px',
+      velocityCtrl: 'slider',
+      rangeCtrl:    'dual-slider',
+      modeCtrl:     'radio-group',
+    },
+  },
+
+  test1: {
+    id: 'test1',
+    label: 'Test 1',
+    bgColor:      () => background(15, 8, 5),
+    bgImages:     {},
+    overlayColor: null,
+    noteStroke:       () => '#C8860A',
+    noteFill:         () => '#7A4A10',
+    activeNoteFill:   () => '#FFB830',
+    highlightFill:    () => '#FF6A00',
+    anchorStroke:     () => '#C8860A',
+    showTableSchema:        true,
+    showCalculatorOverlay:  false,
+    showZodiac:             false,
+    showStarfield:          false,
+    showCircularNoteLabels: false,
+    zodiacVisual:           false,
+    requiresPermission: false,
+    tuning: 'equal12',
+    panel: {
+      bg:          'rgb(18,10,5)',
+      groupBg:     'rgb(35,18,8)',
+      headerBg:    'rgb(70,35,10)',
+      text:        '#E8C880',
+      labelText:   '#A08040',
+      ctrlBg:      '#7A5020',
+      ctrlBorder:  '#3A1A05',
+      toggleOn:    '#8A6A20',
+      toggleErr:   '#8A2A10',
       font:        'Arial, sans-serif',
       fontSize:    '12px',
       velocityCtrl: 'slider',
@@ -6735,6 +7020,181 @@ window.addEventListener('beforeunload', function () {
   stopAllInternalNotes();
 });
 </script>
+
+  <!-- Seq/Gen radio toggle + Sequencer UI -->
+  <script>
+    // ---- Seq / Gen radio switch ----
+    function seqGenSwitch(view) {
+      const genPanels = document.getElementById('gen-panels');
+      const seqPanel  = document.getElementById('sequencer-panel');
+      const seqBtn    = document.getElementById('seq-btn');
+      const genBtn    = document.getElementById('gen-btn');
+      if (view === 'seq') {
+        genPanels.style.display = 'none';
+        seqPanel.style.display  = 'flex';
+        seqBtn.classList.add('active');
+        genBtn.classList.remove('active');
+        seqUIBuildSteps();
+      } else {
+        genPanels.style.display = 'flex';
+        seqPanel.style.display  = 'none';
+        genBtn.classList.add('active');
+        seqBtn.classList.remove('active');
+      }
+    }
+
+    // ---- Build the 16 step cells ----
+    function seqUIBuildSteps() {
+      const container = document.getElementById('seq-steps-row');
+      if (!container) return;
+      // Rebuild if count changed or empty
+      if (container.children.length === (typeof SEQ_STEPS !== 'undefined' ? SEQ_STEPS : 16)) return;
+      const steps = typeof SEQ_STEPS !== 'undefined' ? SEQ_STEPS : 16;
+      container.innerHTML = '';
+      for (let i = 0; i < steps; i++) {
+        const cell = document.createElement('div');
+        const isActive = (typeof seqPattern !== 'undefined') && seqPattern[i] && seqPattern[i].active;
+        cell.className = 'seq-step-cell' + (isActive ? ' active' : '');
+        cell.id = 'seq-step-' + i;
+        cell.onclick = () => seqUIToggleStep(i);
+        cell.innerHTML =
+          '<span class="seq-step-num">' + (i + 1) + '</span>' +
+          '<span class="seq-step-chord" id="seq-step-chord-' + i + '">—</span>';
+        container.appendChild(cell);
+      }
+    }
+
+    // ---- Toggle a step on/off ----
+    function seqUIToggleStep(i) {
+      if (typeof seqPattern === 'undefined') return;
+      seqPattern[i].active = !seqPattern[i].active;
+      const cell = document.getElementById('seq-step-' + i);
+      if (cell) cell.classList.toggle('active', seqPattern[i].active);
+    }
+
+    // ---- Transport controls ----
+    function seqUIPlay() {
+      if (typeof seqStart === 'function') seqStart();
+      const btn = document.getElementById('seq-play-btn');
+      if (btn) btn.classList.add('active');
+    }
+    function seqUIStop() {
+      if (typeof seqStop === 'function') seqStop();
+      const btn = document.getElementById('seq-play-btn');
+      if (btn) btn.classList.remove('active');
+    }
+    function seqUIReset() {
+      if (typeof seqReset === 'function') seqReset();
+      const btn = document.getElementById('seq-play-btn');
+      if (btn) btn.classList.remove('active');
+      // Clear playing highlight
+      document.querySelectorAll('.seq-step-cell.playing')
+        .forEach(el => el.classList.remove('playing'));
+    }
+
+    // ---- Highlight the currently playing step (called by sequencer engine) ----
+    function seqUIHighlightStep(stepIndex) {
+      document.querySelectorAll('.seq-step-cell.playing')
+        .forEach(el => el.classList.remove('playing'));
+      const cell = document.getElementById('seq-step-' + stepIndex);
+      if (cell) cell.classList.add('playing');
+    }
+  </script>
+
+  <!-- Piano keyboard view -->
+  <script>
+    const KB_MIDI_START = 36; // C2
+    const KB_MIDI_END   = 95; // B6  (5 octaves)
+    const KB_BLACK_SET  = new Set([1, 3, 6, 8, 10]); // semitones that are black keys
+
+    // Center of each black key as a fraction of white-key-width from the octave start.
+    // A black key sits between two white keys — its center is at their shared boundary:
+    //   C#(1)  at the C–D  boundary → 1.0 × ww
+    //   D#(3)  at the D–E  boundary → 2.0 × ww
+    //   F#(6)  at the F–G  boundary → 4.0 × ww
+    //   G#(8)  at the G–A  boundary → 5.0 × ww
+    //   A#(10) at the A–B  boundary → 6.0 × ww
+    const KB_BLACK_CENTER = { 1: 1.0, 3: 2.0, 6: 4.0, 8: 5.0, 10: 6.0 };
+
+    function kbBuild() {
+      const wrap = document.getElementById('kb-piano-wrap');
+      if (!wrap || wrap.children.length > 0) return;
+
+      // 5 octaves = 35 white keys
+      const N_WHITE = 35;
+      const wrapW = wrap.offsetWidth || wrap.parentElement.offsetWidth || 800;
+      const wrapH = wrap.offsetHeight || 100;
+      const ww = wrapW / N_WHITE;  // white key width
+      const bw = ww * 0.58;        // black key width
+      const bh = wrapH * 0.60;     // black key height
+
+      // KB_MIDI_START is C2 (MIDI 36), so octave offset = floor((midi - 36) / 12)
+      let wi = 0; // running white-key counter
+
+      for (let midi = KB_MIDI_START; midi <= KB_MIDI_END; midi++) {
+        const sem     = midi % 12;
+        const isBlack = KB_BLACK_SET.has(sem);
+        const el      = document.createElement('div');
+        el.id = 'kb-' + midi;
+
+        if (!isBlack) {
+          el.className = 'kb-white';
+          el.style.left   = (wi * ww) + 'px';
+          el.style.width  = (ww - 1) + 'px';
+          el.style.height = wrapH + 'px';
+          wi++;
+        } else {
+          // Octave index from the range start (KB_MIDI_START is always C)
+          const octOff = Math.floor((midi - KB_MIDI_START) / 12);
+          // Center x of this black key in pixels
+          const cx = (octOff * 7 + KB_BLACK_CENTER[sem]) * ww;
+          el.className = 'kb-black';
+          el.style.left   = (cx - bw / 2) + 'px';
+          el.style.width  = bw + 'px';
+          el.style.height = bh + 'px';
+        }
+
+        wrap.appendChild(el);
+      }
+    }
+
+    function kbOn(midi) {
+      if (midi < KB_MIDI_START || midi > KB_MIDI_END) return;
+      const el = document.getElementById('kb-' + midi);
+      if (el) el.classList.add('kb-on');
+    }
+
+    function kbOff(midi) {
+      if (midi < KB_MIDI_START || midi > KB_MIDI_END) return;
+      const el = document.getElementById('kb-' + midi);
+      if (el) el.classList.remove('kb-on');
+    }
+
+    function kbOffAll() {
+      document.querySelectorAll('.kb-white.kb-on, .kb-black.kb-on')
+        .forEach(el => el.classList.remove('kb-on'));
+    }
+
+    // After all app scripts load: build keyboard and patch note send functions
+    window.addEventListener('load', function () {
+      kbBuild();
+
+      if (typeof sendNoteOn === 'function') {
+        const _origOn = sendNoteOn;
+        sendNoteOn = function (ch, note, vel) {
+          kbOn(note);
+          return _origOn(ch, note, vel);
+        };
+      }
+      if (typeof sendNoteOff === 'function') {
+        const _origOff = sendNoteOff;
+        sendNoteOff = function (ch, note, vel) {
+          kbOff(note);
+          return _origOff(ch, note, vel);
+        };
+      }
+    });
+  </script>
 
   <!-- Stub: teacher send (teacher.js will override this) -->
   <script>

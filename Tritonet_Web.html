@@ -1649,7 +1649,7 @@ let nl2pre = 0;
 let CCtritonleft = false;
 let CCtritonright = false;
 
-let outDevices = ["No MIDI Output"];
+let outDevices = ["None"];
 let midioutdevices = 1;
 let inDevices = ["No MIDI Input"];
 let midiindevices = 1;
@@ -6099,7 +6099,7 @@ function syncMainMidiOutDropdownOptions(forceRefresh = false) {
 
   refreshMidiOutputDevicesList();
 
-  let deviceNames = (Array.isArray(outDevices) && outDevices.length > 0) ? outDevices : ["No MIDI Output"];
+  let deviceNames = (Array.isArray(outDevices) && outDevices.length > 0) ? outDevices : ["None"];
   let optionsSignature = deviceNames.join('|');
 
   if (!forceRefresh && midiOutSelect.dataset.signature === optionsSignature) return;

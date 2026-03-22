@@ -1883,23 +1883,32 @@ function assignDefaultMidiPorts() {
   midioutdevices = outDevices.length;
   midiindevices = inDevices.length;
 
-  setMidiOutput(0);
-
-  if (midiInputDevices.length > 0) {
-    setMidiInput(0);
-  } else {
-    if (midiInputPort) midiInputPort.onmidimessage = null;
-    midiInputPort = null;
-  }
-
   if (Array.isArray(channelVariables) && channelVariables.length > 0) {
+    // Only clamp to valid range — do NOT unconditionally reset to 0.
+    // Resetting always was causing the user's selection to jump back to None
+    // whenever onstatechange fired (e.g. initial port enumeration).
     for (let ch = 0; ch < channelVariables.length; ch++) {
-      channelVariables[ch].midiin = 0;
-      channelVariables[ch].midiout = 0;
+      if (channelVariables[ch].midiout >= midioutdevices) channelVariables[ch].midiout = 0;
+      if (channelVariables[ch].midiin  >= midiindevices)  channelVariables[ch].midiin  = 0;
+    }
+    setMidiOutput(channelVariables[channel].midiout);
+    if (midiInputDevices.length > 0) {
+      setMidiInput(channelVariables[channel].midiin);
+    } else {
+      if (midiInputPort) midiInputPort.onmidimessage = null;
+      midiInputPort = null;
     }
     UpdateNumbersAccordingToChannel(channel);
     updateGUIFromState();
     updateGUILabels();
+  } else {
+    setMidiOutput(0);
+    if (midiInputDevices.length > 0) {
+      setMidiInput(0);
+    } else {
+      if (midiInputPort) midiInputPort.onmidimessage = null;
+      midiInputPort = null;
+    }
   }
 }
 

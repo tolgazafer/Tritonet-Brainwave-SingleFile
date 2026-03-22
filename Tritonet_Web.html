@@ -4705,10 +4705,8 @@ function setup() {
   nl2_animated = nl2;
   zodiacangle_animated = zodiacangle;
 
-  // Initialize MIDI (async)
-  initMIDI();
-
-  // Setup GUI
+  // Setup GUI first; MIDI is initialized lazily when the user first
+  // clicks the MIDI output dropdown (see setupMainMidiOutDropdown).
   setupGUI();
 
   applyLaunchParams();
@@ -6049,6 +6047,11 @@ function setupMainMidiOutDropdown() {
   let midiOutSelect = document.getElementById('main-midiout-select');
   if (!midiOutSelect) return;
 
+  // Request MIDI permission only the first time the user clicks the dropdown.
+  midiOutSelect.addEventListener('mousedown', function () {
+    if (!midiAccess) initMIDI();
+  });
+
   midiOutSelect.addEventListener('change', function () {
     let selectedIndex = parseInt(this.value, 10);
     if (Number.isNaN(selectedIndex)) return;
@@ -6125,25 +6128,13 @@ function syncMainMidiOutDropdownOptions(forceRefresh = false) {
   midiOutSelect.dataset.signature = optionsSignature;
 }
 
-let _midiOutPanelWasOpen = false;
 function positionMainMidiOutDropdown() {
   let wrapper = document.getElementById('main-midiout-wrapper');
   if (!wrapper) return;
 
   if (!screenswitch) {
     wrapper.style.display = 'none';
-    _midiOutPanelWasOpen = false;
     return;
-  }
-
-  // Refresh device list the first time the panel becomes visible each open
-  if (!_midiOutPanelWasOpen) {
-    _midiOutPanelWasOpen = true;
-    if (!midiAccess) {
-      ensureMidiAccessForOutputRefresh();
-    } else {
-      syncMainMidiOutDropdownOptions(true);
-    }
   }
 
   wrapper.style.display = 'flex';

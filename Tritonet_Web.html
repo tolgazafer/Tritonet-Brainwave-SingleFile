@@ -299,6 +299,38 @@
     }
     #sound-toggle-btn.inactive { opacity: 0.3; }
 
+    /* ====== LOOK / VIEW SWITCHER ========================================= */
+    #look-switcher-wrapper {
+      position: absolute;
+      width: 140px;
+      z-index: 12;
+    }
+    #look-select {
+      width: 100%;
+      height: 26px;
+      background: #95A9B2;
+      border: 1px solid #1f2128;
+      color: #1f2128;
+      border-radius: 10px;
+      font-size: 12px;
+      font-family: "Courier New", Courier, monospace;
+      font-weight: 700;
+      padding: 0 8px;
+      text-align: center;
+      text-align-last: center;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+    #look-select option {
+      background: #95A9B2;
+      color: #1f2128;
+      font-family: "Courier New", Courier, monospace;
+      font-weight: 700;
+      text-align: center;
+    }
+
     /* ====== OSC MESSAGE BOX ============================================== */
     #osc-messagebox {
       position: absolute;
@@ -509,6 +541,15 @@
         <!-- MIDI Output Dropdown -->
         <div id="main-midiout-wrapper">
           <select id="main-midiout-select"></select>
+        </div>
+
+        <!-- View / Look Switcher -->
+        <div id="look-switcher-wrapper">
+          <select id="look-select" onchange="setLook(this.value)">
+            <option value="simple">Abacus</option>
+            <option value="calculator">Calculator</option>
+            <option value="zodiac">Mundana</option>
+          </select>
         </div>
 
         <!-- OSC Message Box -->

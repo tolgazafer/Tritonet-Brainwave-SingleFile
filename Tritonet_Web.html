@@ -472,23 +472,27 @@
       cursor: pointer;
     }
     #seq-playhead-bar {
-      display: flex;
-      flex-direction: row;
       padding: 4px 8px 0;
-      gap: 3px;
     }
-    .seq-playhead-pip {
-      flex: 1;
-      min-width: 40px;
+    #seq-playhead-track {
+      position: relative;
       height: 5px;
-      border-radius: 3px;
       background: var(--panel-ctrl-border);
-      transition: background 0.05s;
+      border-radius: 3px;
+      overflow: hidden;
     }
-    .seq-playhead-pip.playing {
+    #seq-playhead-indicator {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: calc(100% / 16);
       background: #fff;
-      box-shadow: 0 0 4px rgba(255,255,255,0.6);
+      box-shadow: 0 0 6px rgba(255,255,255,0.7);
+      border-radius: 3px;
+      left: 0;
+      transition: left 0.08s linear;
+      opacity: 0;
     }
+    #seq-playhead-indicator.active { opacity: 1; }
     #seq-steps-row {
       flex: 1;
       display: flex;
@@ -1232,7 +1236,9 @@
 
         </div>
         <div id="seq-playhead-bar">
-          <!-- Playhead pips built by seqUIBuildSteps() -->
+          <div id="seq-playhead-track">
+            <div id="seq-playhead-indicator"></div>
+          </div>
         </div>
         <div id="seq-steps-row">
           <!-- Step cells built by seqUIBuildSteps() -->
@@ -7623,17 +7629,6 @@ window.addEventListener('beforeunload', function () {
       if (!container) return;
       const steps = typeof SEQ_STEPS !== 'undefined' ? SEQ_STEPS : 16;
 
-      // Build playhead pips
-      const pipBar = document.getElementById('seq-playhead-bar');
-      if (pipBar) {
-        pipBar.innerHTML = '';
-        for (let i = 0; i < steps; i++) {
-          const pip = document.createElement('div');
-          pip.className = 'seq-playhead-pip';
-          pip.id = 'seq-pip-' + i;
-          pipBar.appendChild(pip);
-        }
-      }
       container.innerHTML = '';
 
       for (let i = 0; i < steps; i++) {
@@ -7679,6 +7674,7 @@ window.addEventListener('beforeunload', function () {
         "Mode Center (G)": (typeof modecenter  !== 'undefined') ? modecenter  : 3,
         "Chooser (G)":     (typeof chooser     !== 'undefined') ? chooser     : 4,
         "Anchor (G)":      (typeof anchor      !== 'undefined') ? anchor      : 3,
+        "acc":             (typeof acc !== 'undefined') ? acc.slice() : null,
       };
     }
 
@@ -7728,6 +7724,11 @@ window.addEventListener('beforeunload', function () {
         if (typeof currentKey !== 'undefined') currentKey = anchorKeys[anchor];
         if (typeof Anchor_fn    === 'function') Anchor_fn();
         if (typeof AnchorWings  === 'function') AnchorWings();
+      }
+
+      // Restore accidental array so ChordName reflects the captured key signature
+      if (row["acc"] && typeof acc !== 'undefined') {
+        row["acc"].forEach((v, i) => { if (i < acc.length) acc[i] = v; });
       }
 
       if (typeof _seqSilentMode              !== 'undefined') _seqSilentMode              = false;
@@ -7787,12 +7788,17 @@ window.addEventListener('beforeunload', function () {
     function _seqAuditionStep(i) {
       if (typeof seqPattern === 'undefined') return;
       const p = seqPattern[i];
-      _seqLoadStateRow(p.stateRow);
+      _seqLoadStateRow(p.stateRow);   // silent: updates visual state, _seqSilentMode restored to false
       if (typeof channelVariables !== 'undefined' && typeof channel !== 'undefined'
           && channelVariables[channel]) {
         channelVariables[channel].velocity = Math.max(1, Math.min(127, p.vel));
       }
-      if (typeof PlaybackOn === 'function') {
+      // Call notahesap() directly — bypasses the OSCenter guard inside handleKeyPress,
+      // ensuring result[] is current before PlaybackOn fires.
+      // _seqSilentMode is false here so notahesap will call PlaybackOn() internally.
+      if (typeof notahesap === 'function') {
+        try { notahesap(); } catch(e) {}
+      } else if (typeof PlaybackOn === 'function') {
         try { PlaybackOn(); } catch(e) {}
       } else if (typeof simpleplay !== 'undefined') {
         simpleplay = true;
@@ -7942,7 +7948,8 @@ window.addEventListener('beforeunload', function () {
       }
       if (!playing) {
         document.querySelectorAll('.seq-step-cell.playing').forEach(el => el.classList.remove('playing'));
-        document.querySelectorAll('.seq-playhead-pip.playing').forEach(el => el.classList.remove('playing'));
+        const ind = document.getElementById('seq-playhead-indicator');
+        if (ind) ind.classList.remove('active');
       }
     }
     function seqUIPlayToggle() {
@@ -7984,10 +7991,12 @@ window.addEventListener('beforeunload', function () {
       const cell = document.getElementById('seq-step-' + stepIndex);
       if (cell) cell.classList.add('playing');
 
-      document.querySelectorAll('.seq-playhead-pip.playing')
-        .forEach(el => el.classList.remove('playing'));
-      const pip = document.getElementById('seq-pip-' + stepIndex);
-      if (pip) pip.classList.add('playing');
+      const steps = typeof SEQ_STEPS !== 'undefined' ? SEQ_STEPS : 16;
+      const ind = document.getElementById('seq-playhead-indicator');
+      if (ind) {
+        ind.classList.add('active');
+        ind.style.left = (stepIndex / steps * 100) + '%';
+      }
     }
 
     // ---- Pattern blobs: 4 independent pattern banks (A B C D) ----

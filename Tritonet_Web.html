@@ -7769,18 +7769,23 @@ window.addEventListener('beforeunload', function () {
       const p = seqPattern[i];
       p.stateRow     = _seqBuildStateRow();
       p.anchor       = p.stateRow["Anchor (G)"];    // for _seqStepPopulated check
-      p.chordName    = (typeof ChordName !== 'undefined') ? _seqNormaliseChordName(ChordName) : '';
       p.vel          = (typeof channelVariables !== 'undefined' && typeof channel !== 'undefined'
                         && channelVariables[channel])
                         ? (channelVariables[channel].velocity || 80) : 80;
       p.triggerChord = true;
       p.active       = true;
       p.thumbnail    = '';
+      p.chordName    = '';     // filled in the RAF callback once draw() has run with current acc[]
       seqUIRefreshCell(i);
       const _i = i;
       requestAnimationFrame(() => requestAnimationFrame(() => {
         const url = _seqCaptureCellThumbnail();
-        if (url) { seqPattern[_i].thumbnail = url; seqUIRefreshCell(_i); }
+        if (url) { seqPattern[_i].thumbnail = url; }
+        if (typeof ChordName !== 'undefined') {
+          const cn = _seqNormaliseChordName(ChordName);
+          if (cn) seqPattern[_i].chordName = cn;
+        }
+        seqUIRefreshCell(_i);
       }));
     }
 
@@ -7848,12 +7853,20 @@ window.addEventListener('beforeunload', function () {
           if (!p.active || p.thumbnail || !p.stateRow) continue;
           _seqLoadStateRow(p.stateRow);
           await twoFrames();
+          // After two frames, draw() has run with the restored state (including correct acc[]).
+          // Persist the computed acc[] back into stateRows that don't have it (randomized steps)
+          // so future loads can correctly restore accidentals.
+          if (!p.stateRow["acc"] && typeof acc !== 'undefined') {
+            p.stateRow["acc"] = acc.slice();
+          }
+          // Always (re)compute chordName from ChordName, which now reflects the correct acc[].
+          if (typeof ChordName !== 'undefined') {
+            const cn = _seqNormaliseChordName(ChordName);
+            if (cn) p.chordName = cn;
+          }
           const url = _seqCaptureCellThumbnail();
           if (url) {
             p.thumbnail = url;
-            if (!p.chordName && typeof ChordName !== 'undefined') {
-              p.chordName = _seqNormaliseChordName(ChordName);
-            }
             seqUIRefreshCell(i);
           }
         }

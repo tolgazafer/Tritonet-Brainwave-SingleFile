@@ -63,6 +63,9 @@
       overflow: hidden;
       background: #000;
       flex-shrink: 0;
+      /* Contain the z-index stacking context so child z-indices (10,12,20)
+         don't compete with #pattern-strip and #bottom-footer siblings. */
+      isolation: isolate;
     }
     #tritonet-app canvas {
       display: block;
@@ -92,6 +95,123 @@
       text-align: center;
       letter-spacing: 0.02em;
     }
+    /* ====== STATE INFO PANEL (inside teacher panel) ====================== */
+    #state-info {
+      flex-shrink: 0;
+      background: #b8b8b8;
+      border-top: 1px solid #aaa;
+      border-bottom: 1px solid #aaa;
+      padding: 10px 12px 12px;
+      font-family: var(--panel-font);
+    }
+    #state-info .si-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    #state-info .si-row:last-child { margin-bottom: 0; }
+    .si-cell {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #cccccc;
+      border: 1px solid #999;
+      border-radius: 4px;
+      padding: 4px 2px;
+      min-width: 0;
+    }
+    .si-label {
+      font-size: 8px;
+      color: #777;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 2px;
+      white-space: nowrap;
+    }
+    .si-value {
+      font-size: 13px;
+      font-weight: bold;
+      color: #222;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      text-align: center;
+    }
+    .si-value.si-small { font-size: 10px; font-weight: normal; }
+    .si-chord-row {
+      display: flex;
+      gap: 4px;
+      margin-top: 0;
+    }
+    .si-note-cell {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #c4c4c4;
+      border: 1px solid #999;
+      border-radius: 3px;
+      padding: 3px 1px;
+    }
+    .si-note-label {
+      font-size: 7px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .si-note-value {
+      font-size: 11px;
+      font-weight: bold;
+      color: #222;
+    }
+    /* Scale interval row */
+    .si-scale-row {
+      display: flex;
+      gap: 3px;
+      margin-top: 8px;
+    }
+    .si-scale-cell {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #c0c0c0;
+      border: 1px solid #999;
+      border-radius: 3px;
+      padding: 3px 1px;
+      min-width: 0;
+    }
+    .si-scale-deg {
+      font-size: 8px;
+      color: #666;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+    .si-scale-note {
+      font-size: 10px;
+      font-weight: bold;
+      color: #222;
+      white-space: nowrap;
+    }
+    .si-raw-row {
+      margin-top: 5px;
+      font-family: monospace;
+      font-size: 10px;
+      color: #222;
+      background: #b8b8b8;
+      border: 1px solid #999;
+      border-radius: 3px;
+      padding: 3px 5px;
+      word-break: break-all;
+    }
+    .si-raw-label {
+      font-weight: bold;
+      color: #555;
+      margin-right: 3px;
+    }
+
     #teacher-chat {
       flex: 1;
       overflow-y: auto;
@@ -141,6 +261,8 @@
       border-top: 1px solid var(--panel-ctrl-border);
       overflow: hidden;
       min-height: 0;
+      position: relative;
+      z-index: 1;
     }
 
     /* Narrow Seq / Gen toggle sidebar */
@@ -224,24 +346,90 @@
     #seq-transport {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 5px 10px;
+      gap: 0;
+      padding: 0;
       border-bottom: 1px solid var(--panel-ctrl-border);
       flex-shrink: 0;
       background: var(--panel-group-bg);
+      flex-wrap: nowrap;
+      height: 38px;
     }
-    #seq-transport label {
+    /* Transport sections separated by dividers */
+    .seq-t-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0 10px;
+      border-right: 1px solid var(--panel-ctrl-border);
+      height: 100%;
+      box-sizing: border-box;
+    }
+    .seq-t-group:last-child { border-right: none; margin-left: auto; }
+    .seq-t-label {
+      font-size: 9px;
+      color: var(--panel-label);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .seq-t-value {
       font-size: 11px;
-      color: var(--panel-label);
+      font-weight: bold;
+      color: var(--panel-text);
+      min-width: 26px;
+      text-align: center;
     }
-    #seq-transport .seq-title {
-      margin-left: auto;
-      font-size: 10px;
-      color: var(--panel-label);
-      font-style: italic;
+    /* Transport buttons */
+    #seq-play-btn, #seq-link-btn {
+      font-size: 13px;
+      height: 26px;
+      padding: 0 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid rgba(255,255,255,0.35);
+      border-radius: 5px;
     }
-    #seq-tempo-input {
-      width: 52px;
+    #seq-play-btn  { min-width: 32px; }
+    #seq-link-btn  { min-width: 48px; }
+    #seq-play-btn.active {
+      background: var(--panel-toggle-on);
+      color: #fff;
+      border-color: var(--panel-toggle-on);
+    }
+    #seq-link-btn.linked {
+      background: var(--panel-ctrl-bg);
+      color: #fff;
+      border-color: var(--panel-ctrl-bg);
+    }
+    /* Pattern blob buttons A B C D */
+    .seq-blob {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.3);
+      background: var(--panel-group-bg);
+      color: var(--panel-text);
+      font-size: 11px;
+      font-weight: bold;
+      font-family: var(--panel-font);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, border-color 0.15s;
+      user-select: none;
+    }
+    .seq-blob:hover { border-color: var(--panel-ctrl-bg); }
+    .seq-blob.active {
+      background: var(--panel-group-bg);
+      border-color: var(--panel-ctrl-bg);
+      border-width: 2px;
+      color: var(--panel-ctrl-bg);
+    }
+    /* Number inputs */
+    .seq-num-input {
+      width: 48px;
       background: var(--panel-bg);
       border: 1px solid var(--panel-ctrl-border);
       color: var(--panel-text);
@@ -249,10 +437,39 @@
       border-radius: 3px;
       font-size: 11px;
       font-family: var(--panel-font);
+      text-align: center;
     }
-    #seq-play-btn.active {
-      background: var(--panel-toggle-on);
-      color: #fff;
+    /* Select dropdowns */
+    .seq-select {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-ctrl-border);
+      color: var(--panel-text);
+      padding: 2px 3px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-family: var(--panel-font);
+      cursor: pointer;
+    }
+    /* Sliders */
+    .seq-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 70px;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.25);
+      outline: none;
+      cursor: pointer;
+    }
+    .seq-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--panel-ctrl-bg);
+      border: 2px solid rgba(255,255,255,0.5);
+      cursor: pointer;
     }
     #seq-steps-row {
       flex: 1;
@@ -273,7 +490,7 @@
       border: 1px solid var(--panel-ctrl-border);
       border-radius: 4px;
       background: var(--panel-group-bg);
-      padding: 3px 2px;
+      padding: 3px 2px; min-height: 80px;
       cursor: pointer;
       user-select: none;
       gap: 2px;
@@ -287,26 +504,61 @@
       border-color: #3a6a3a;
     }
     .seq-step-cell.playing {
-      background: #4A6A7A;
-      border-color: #3a5a6a;
+      background: var(--panel-ctrl-bg);
+      /* inset shadow draws the white ring without changing border-width or layout */
+      box-shadow: inset 0 0 0 2px #fff;
     }
+    .seq-step-cell.active.playing {
+      background: var(--panel-ctrl-bg);
+      box-shadow: inset 0 0 0 2px #fff;
+    }
+    .seq-step-del {
+      position: absolute;
+      top: 2px;
+      right: 3px;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.5);
+      font-size: 14px;
+      line-height: 1;
+      padding: 0 1px;
+      cursor: pointer;
+      z-index: 2;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .seq-step-del:hover { color: #f66; }
+    .seq-step-cell.active:hover .seq-step-del { opacity: 1; }
+    .seq-step-cell { position: relative; }
     .seq-step-num {
       font-size: 9px;
       color: var(--panel-label);
       font-family: var(--panel-font);
       line-height: 1;
     }
-    .seq-step-cell.active .seq-step-num {
-      color: #cfc;
-    }
+    .seq-step-cell.active   .seq-step-num { display: none; }   /* hidden when populated */
+    .seq-step-cell.playing  .seq-step-num { display: none; }
     .seq-step-chord {
-      font-size: 9px;
+      font-size: 13px;
+      font-weight: bold;
       color: var(--panel-text);
       font-family: var(--panel-font);
       text-align: center;
       line-height: 1.2;
-      min-height: 10px;
+      white-space: nowrap;
+      position: absolute;
+      bottom: 3px;
+      left: 0; right: 0;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.9);
     }
+    .seq-step-thumb {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 2px;
+      display: none;
+    }
+    /* .seq-step-thumb display is set by JS — never shown with empty src */
 
     /* ====== BOTTOM FOOTER BAR ============================================ */
     #bottom-footer {
@@ -785,6 +1037,58 @@
       <!-- AI Teacher Panel (right) -->
       <div id="teacher-panel">
         <div id="teacher-panel-header">Ai Teacher</div>
+
+        <!-- Live state info -->
+        <div id="state-info">
+          <div class="si-row">
+            <div class="si-cell">
+              <span class="si-label">Key</span>
+              <span class="si-value" id="si-key">—</span>
+            </div>
+            <div class="si-cell" style="flex:2">
+              <span class="si-label">Scale / Mode</span>
+              <span class="si-value si-small" id="si-mode">—</span>
+            </div>
+            <div class="si-cell">
+              <span class="si-label">Harmony</span>
+              <span class="si-value si-small" id="si-harmony">—</span>
+            </div>
+          </div>
+          <div class="si-row">
+            <div class="si-cell">
+              <span class="si-label">Voicing</span>
+              <span class="si-value si-small" id="si-voicing">—</span>
+            </div>
+            <div class="si-cell">
+              <span class="si-label">Channel</span>
+              <span class="si-value" id="si-channel">—</span>
+            </div>
+          </div>
+          <div class="si-chord-row">
+            <div class="si-note-cell">
+              <span class="si-note-label">Bass</span>
+              <span class="si-note-value" id="si-note-bass">—</span>
+            </div>
+            <div class="si-note-cell">
+              <span class="si-note-label">Tenor</span>
+              <span class="si-note-value" id="si-note-tenor">—</span>
+            </div>
+            <div class="si-note-cell">
+              <span class="si-note-label">Alto</span>
+              <span class="si-note-value" id="si-note-alto">—</span>
+            </div>
+            <div class="si-note-cell">
+              <span class="si-note-label">Soprano</span>
+              <span class="si-note-value" id="si-note-soprano">—</span>
+            </div>
+          </div>
+          <!-- Scale intervals: 7 cells built by JS -->
+          <div class="si-scale-row" id="si-scale-row"></div>
+          <!-- Raw integer array dumps -->
+          <div class="si-raw-row"><span class="si-raw-label">scale[]</span><span id="si-raw-scale">—</span></div>
+          <div class="si-raw-row"><span class="si-raw-label">result[]</span><span id="si-raw-result">—</span></div>
+        </div>
+
         <div id="teacher-chat"></div>
         <div id="teacher-input-row">
           <div id="teacher-prompt-label">Prompt Area</div>
@@ -800,12 +1104,12 @@
 
       <!-- Seq / Gen toggle sidebar (radio buttons — Gen is default) -->
       <div id="seq-gen-sidebar">
-        <div class="seq-gen-btn" id="seq-btn" title="Sequencer" onclick="seqGenSwitch('seq')">Seq</div>
-        <div class="seq-gen-btn active" id="gen-btn" title="Generator" onclick="seqGenSwitch('gen')">Gen</div>
+        <div class="seq-gen-btn active" id="seq-btn" title="Sequencer" onclick="seqGenSwitch('seq')">Seq</div>
+        <div class="seq-gen-btn" id="gen-btn" title="Generator" onclick="seqGenSwitch('gen')">Gen</div>
       </div>
 
       <!-- Gen view: 4 generator panels -->
-      <div id="gen-panels">
+      <div id="gen-panels" style="display:none;">
         <div class="pattern-gen" id="pg-1">
           <div class="pattern-gen-header">Generator 1</div>
           <div class="pattern-gen-body">Scaffold — coming soon</div>
@@ -825,15 +1129,89 @@
       </div>
 
       <!-- Seq view: Sequencer panel (hidden by default) -->
-      <div id="sequencer-panel">
+      <div id="sequencer-panel" style="display:flex;">
         <div id="seq-transport">
-          <button class="gui-btn" id="seq-play-btn" onclick="seqUIPlay()">&#9654; Play</button>
-          <button class="gui-btn" id="seq-stop-btn" onclick="seqUIStop()">&#9632; Stop</button>
-          <button class="gui-btn" onclick="seqUIReset()">&#8635; Reset</button>
-          <label for="seq-tempo-input" style="margin-left:10px;">BPM</label>
-          <input type="number" id="seq-tempo-input" value="120" min="20" max="300"
-                 oninput="seqSetTempo(+this.value)">
-          <span class="seq-title">Sequencer &mdash; 16 steps</span>
+
+          <!-- Play / Stop / Random -->
+          <div class="seq-t-group">
+            <button class="gui-btn" id="seq-play-btn" title="Play / Stop" onclick="seqUIPlayToggle()">&#9654;</button>
+            <button class="gui-btn" id="seq-rnd-btn"  title="Randomize pattern" onclick="seqUIRandomize()">&#9898; RND</button>
+          </div>
+
+          <!-- Rate -->
+          <div class="seq-t-group">
+            <span class="seq-t-label">Rate</span>
+            <select class="seq-select" id="seq-rate-select" onchange="seqSetRate(this.value); seqUIBlobSaveParams();">
+              <optgroup label="Measures">
+                <option value="32">8 bars</option>
+                <option value="16">4 bars</option>
+                <option value="8">2 bars</option>
+                <option value="4">1 bar</option>
+              </optgroup>
+              <optgroup label="Notes">
+                <option value="2">1/2</option>
+                <option value="1">1/4</option>
+                <option value="0.5">1/8</option>
+                <option value="0.25" selected>1/16</option>
+                <option value="0.125">1/32</option>
+              </optgroup>
+              <optgroup label="Triplets">
+                <option value="2.6667">1/2T</option>
+                <option value="1.3333">1/4T</option>
+                <option value="0.6667">1/8T</option>
+                <option value="0.3333">1/16T</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <!-- Swing -->
+          <div class="seq-t-group">
+            <span class="seq-t-label">Swing</span>
+            <input class="seq-slider" type="range" id="seq-swing-slider"
+                   min="0" max="100" value="0"
+                   oninput="seqSetSwing(this.value); document.getElementById('seq-swing-val').textContent=this.value+'%';">
+            <span class="seq-t-value" id="seq-swing-val">0%</span>
+          </div>
+
+          <!-- Note Length -->
+          <div class="seq-t-group">
+            <span class="seq-t-label">Length</span>
+            <input class="seq-slider" type="range" id="seq-length-slider"
+                   min="1" max="100" value="50"
+                   oninput="seqSetNoteLength(this.value); document.getElementById('seq-length-val').textContent=this.value+'%'; seqUIBlobSaveParams();">
+            <span class="seq-t-value" id="seq-length-val">50%</span>
+          </div>
+
+          <!-- Direction -->
+          <div class="seq-t-group">
+            <span class="seq-t-label">Direction</span>
+            <select class="seq-select" id="seq-dir-select" onchange="seqSetDirection(this.value); seqUIBlobSaveParams();">
+              <option value="fwd" selected>Forward</option>
+              <option value="bwd">Backward</option>
+              <option value="ping">Ping-Pong</option>
+              <option value="drunk">Drunk</option>
+              <option value="random">Random</option>
+            </select>
+          </div>
+
+          <!-- Pattern blobs A B C D + BPM + Link (right-aligned) -->
+          <div class="seq-t-group" style="margin-left:auto; gap:6px;">
+            <span class="seq-t-label">Pattern</span>
+            <div class="seq-blob active" id="seq-blob-0" title="Pattern 1" onclick="seqUILoadBlob(0)">1</div>
+            <div class="seq-blob"        id="seq-blob-1" title="Pattern 2" onclick="seqUILoadBlob(1)">2</div>
+            <div class="seq-blob"        id="seq-blob-2" title="Pattern 3" onclick="seqUILoadBlob(2)">3</div>
+            <div class="seq-blob"        id="seq-blob-3" title="Pattern 4" onclick="seqUILoadBlob(3)">4</div>
+          </div>
+
+          <!-- BPM + Link (same group, right edge) -->
+          <div class="seq-t-group" style="border-right:none; gap:8px;">
+            <span class="seq-t-label">BPM</span>
+            <input class="seq-num-input" type="number" id="seq-tempo-input"
+                   value="120" min="20" max="300"
+                   oninput="seqSetTempo(this.value)">
+            <button class="gui-btn" id="seq-link-btn" title="Ableton Link (requires server bridge)" onclick="seqUIToggleLink()">&#9741; Link</button>
+          </div>
+
         </div>
         <div id="seq-steps-row">
           <!-- Step cells built by seqUIBuildSteps() -->
@@ -1374,63 +1752,67 @@ function disableMPE() {
 
 // ===== MODULE: js/sequencer.js =====
 // ===================== TRITONET SEQUENCER ==================================
-// A step sequencer that fires Tritonet controller events on each step.
-// Each step can change: root key, scale/mode, anchor position, and trigger
-// the current chord. Timing uses AudioContext.currentTime for sample-accurate
-// scheduling (same approach as Tone.js / Web Audio API tutorial by Chris Wilson).
-//
-// The sequencer does NOT generate notes directly — it drives the existing
-// Tritonet engine (TableCalculator, ChooserCalculator, etc.) exactly as if
-// the user had pressed a key or moved a controller.
+// Drives the Tritonet engine one step at a time.
+// Timing: pure setTimeout — no AudioContext dependency, so the playhead
+// moves immediately when Play is pressed regardless of audio state.
 
-// ---------------------------------------------------------------------------
-// SEQUENCER STATE
-// ---------------------------------------------------------------------------
-const SEQ_STEPS = 16;
-
-// Each step: { active, key (0-11 or null), mode (string or null),
-//              anchor (0-6 or null), triggerChord, vel, duration }
-let seqPattern = Array.from({ length: SEQ_STEPS }, () => ({
-  active:       false,
-  key:          null,   // MIDI root note offset 0-11, null = keep current
-  mode:         null,   // mode name string, null = keep current
-  anchor:       null,   // anchor index 0-6, null = keep current
-  triggerChord: true,   // fire the chord on this step
-  vel:          80,
-  duration:     0.5,    // fraction of one step length (0.0–1.0)
-}));
-
-let seqTempo   = 120;   // BPM
-let seqRunning = false;
-let seqStep    = 0;
-
-// Internal scheduling
-let _seqNextStepTime  = 0;   // AudioContext time of the next step
-let _seqScheduleAhead = 0.1; // seconds to look ahead when scheduling
-let _seqTimerID       = null;
-
-// ---------------------------------------------------------------------------
-// seqStepDuration()
-// Returns the duration of one step in seconds at current tempo.
-// Steps are quarter-notes (one beat per step).
-// ---------------------------------------------------------------------------
-function seqStepDuration() {
-  return 60 / seqTempo;
+// Stub for the playhead highlight — overridden by the inline <script> in
+// index.html once the DOM is ready, but works identically either way.
+function seqUIHighlightStep(i) {
+  document.querySelectorAll('.seq-step-cell.playing')
+    .forEach(el => el.classList.remove('playing'));
+  const cell = document.getElementById('seq-step-' + i);
+  if (cell) cell.classList.add('playing');
 }
 
 // ---------------------------------------------------------------------------
-// seqStart() / seqStop() / seqReset()
+// STATE
+// ---------------------------------------------------------------------------
+const SEQ_STEPS = 16;
+
+let seqPattern = Array.from({ length: SEQ_STEPS }, () => ({
+  active:       false,
+  anchor:       null,     // kept for quick populated check
+  triggerChord: true,
+  vel:          80,
+  chordName:    '',       // display label
+  stateRow:     null,     // full Tritonet position row for _seqLoadStateRow
+  thumbnail:    '',       // data URL snapshot of Tritonet circle at record time
+}));
+
+let seqTempo      = 120;    // BPM
+let seqRunning    = false;
+let seqStep       = 0;
+let seqSwing      = 0;      // 0.0 – 0.5  (fraction of step duration)
+let seqNoteLength = 0.5;    // 0.05 – 1.0 (gate as fraction of step duration)
+let seqDirection  = 'fwd';  // 'fwd' | 'bwd' | 'ping' | 'drunk' | 'random'
+let seqRate       = 0.25;   // beat fraction: 1=quarter, 0.5=8th, 0.25=16th …
+let seqLinkActive = false;
+
+let _seqTimerID      = null;
+let _seqNoteOffTimer = null;   // tracked so empty steps can cancel it
+let _seqActiveNotes  = null;   // notes captured at note-on; used by note-off
+let _seqPingDir      = 1;
+let _seqStepCount    = 0;
+
+// ---------------------------------------------------------------------------
+// PUBLIC: START / STOP / RESET
 // ---------------------------------------------------------------------------
 function seqStart() {
   if (seqRunning) return;
-  if (typeof audioContext === 'undefined' || !audioContext) {
-    console.warn('Sequencer: audioContext not available');
-    return;
+
+  // Wake audio if it exists and is suspended — but don't block on it.
+  if (typeof audioContext !== 'undefined' && audioContext &&
+      audioContext.state === 'suspended') {
+    audioContext.resume().catch(() => {});
   }
-  seqRunning = true;
-  seqStep = 0;
-  _seqNextStepTime = audioContext.currentTime;
-  _seqScheduleLoop();
+
+  seqRunning    = true;
+  seqStep       = (seqDirection === 'bwd') ? SEQ_STEPS - 1 : 0;
+  _seqPingDir   = 1;
+  _seqStepCount = 0;
+
+  _seqTick(); // kick off immediately
 }
 
 function seqStop() {
@@ -1439,94 +1821,201 @@ function seqStop() {
     clearTimeout(_seqTimerID);
     _seqTimerID = null;
   }
+  _seqNoteOff(); // release any held notes
 }
 
 function seqReset() {
   seqStop();
-  seqStep = 0;
+  seqStep       = 0;
+  _seqPingDir   = 1;
+  _seqStepCount = 0;
 }
 
 // ---------------------------------------------------------------------------
-// seqSetTempo(bpm)
+// PUBLIC: SETTERS
 // ---------------------------------------------------------------------------
 function seqSetTempo(bpm) {
-  seqTempo = Math.max(20, Math.min(300, bpm));
+  seqTempo = Math.max(20, Math.min(300, +bpm || 120));
+}
+
+function seqSetSwing(val) {
+  // slider 0-100 → internal 0.0-0.5
+  seqSwing = Math.max(0, Math.min(0.5, (+val || 0) / 200));
+}
+
+function seqSetNoteLength(val) {
+  // slider 1-100 → internal 0.05-1.0
+  seqNoteLength = Math.max(0.05, Math.min(1.0, (+val || 50) / 100));
+}
+
+function seqSetRate(val) {
+  seqRate = parseFloat(val) || 0.25;
+}
+
+function seqSetDirection(val) {
+  seqDirection = val;
+  _seqPingDir  = (val === 'bwd') ? -1 : 1;
 }
 
 // ---------------------------------------------------------------------------
-// seqSetStep(index, props)
-// Update a single step. props is a partial object — only provided keys change.
-// Example: seqSetStep(3, { active: true, key: 5, triggerChord: true })
+// INTERNAL: STEP DURATION  (beat fraction × beat length in ms)
 // ---------------------------------------------------------------------------
-function seqSetStep(index, props) {
-  if (index < 0 || index >= SEQ_STEPS) return;
-  Object.assign(seqPattern[index], props);
+function seqStepDurationMs() {
+  return (60 / seqTempo) * seqRate * 1000;
 }
 
 // ---------------------------------------------------------------------------
-// _seqScheduleLoop()
-// Runs on a JS timer, scheduling AudioContext events slightly ahead of time.
-// This is the standard Web Audio lookahead pattern — keeps audio accurate
-// even if the JS thread is blocked for a frame.
+// INTERNAL: ADVANCE STEP INDEX
 // ---------------------------------------------------------------------------
-function _seqScheduleLoop() {
+function _seqAdvanceStep() {
+  switch (seqDirection) {
+    case 'bwd':
+      seqStep = (seqStep - 1 + SEQ_STEPS) % SEQ_STEPS;
+      break;
+    case 'ping':
+      seqStep += _seqPingDir;
+      if (seqStep >= SEQ_STEPS) { seqStep = SEQ_STEPS - 2; _seqPingDir = -1; }
+      if (seqStep < 0)          { seqStep = 1;              _seqPingDir =  1; }
+      break;
+    case 'drunk':
+      seqStep = (seqStep + (Math.random() < 0.5 ? -1 : 1) + SEQ_STEPS) % SEQ_STEPS;
+      break;
+    case 'random':
+      seqStep = Math.floor(Math.random() * SEQ_STEPS);
+      break;
+    case 'fwd':
+    default:
+      seqStep = (seqStep + 1) % SEQ_STEPS;
+      break;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// INTERNAL: MAIN TICK  (one step per call, self-rescheduling)
+// ---------------------------------------------------------------------------
+function _seqTick() {
   if (!seqRunning) return;
 
-  const ctx = audioContext;
-  const lookAhead = _seqScheduleAhead;
+  const stepMs  = seqStepDurationMs();
+  const thisStep = seqStep;
+  const isOdd   = (_seqStepCount % 2) === 1;
+  const swingMs = isOdd ? seqSwing * stepMs : 0;
 
-  while (_seqNextStepTime < ctx.currentTime + lookAhead) {
-    _seqFireStep(seqStep, _seqNextStepTime);
-    seqStep = (seqStep + 1) % SEQ_STEPS;
-    _seqNextStepTime += seqStepDuration();
+  // Move playhead immediately (visual is not swung — beat stays in place)
+  seqUIHighlightStep(thisStep);
+
+  // Fire chord: delayed by swing on odd steps
+  if (swingMs > 0) {
+    setTimeout(() => _seqFireStep(thisStep, stepMs), swingMs);
+  } else {
+    _seqFireStep(thisStep, stepMs);
   }
 
-  // Reschedule slightly before the next step is due
-  const msUntilNext = Math.max(0, (_seqNextStepTime - ctx.currentTime - lookAhead / 2) * 1000);
-  _seqTimerID = setTimeout(_seqScheduleLoop, msUntilNext);
+  _seqAdvanceStep();
+  _seqStepCount++;
+
+  // Schedule next tick at the next step boundary
+  _seqTimerID = setTimeout(_seqTick, stepMs);
 }
 
 // ---------------------------------------------------------------------------
-// _seqFireStep(stepIndex, time)
-// Applies the step's parameters to the Tritonet engine. The 'time' parameter
-// is the AudioContext timestamp — use it if you need sample-accurate audio
-// triggers. GUI/state changes happen immediately (they're visual, not audio).
+// INTERNAL: FIRE ONE STEP
 // ---------------------------------------------------------------------------
-function _seqFireStep(stepIndex, time) {
+function _seqFireStep(stepIndex, stepMs) {
   const step = seqPattern[stepIndex];
-  if (!step.active) return;
 
-  // Apply key change (root note)
-  if (step.key !== null && typeof nota1 !== 'undefined') {
-    nota1 = step.key;
-    screentrigger = true;
+  if (!step.active) {
+    // Empty step: cancel pending note-off so previous chord rings through
+    if (_seqNoteOffTimer !== null) {
+      clearTimeout(_seqNoteOffTimer);
+      _seqNoteOffTimer = null;
+    }
+    return;
   }
 
-  // Apply anchor change
-  if (step.anchor !== null && typeof anchor !== 'undefined') {
+  // Restore full Tritonet state via the proper key handlers (updates visuals too)
+  if (step.stateRow && typeof _seqLoadStateRow === 'function') {
+    _seqLoadStateRow(step.stateRow);
+  } else if (step.anchor !== null && typeof anchor !== 'undefined') {
     anchor = step.anchor;
     screentrigger = true;
   }
 
-  // Trigger chord (calls existing Tritonet chord engine)
   if (step.triggerChord) {
-    _seqTriggerChord(step.vel, step.duration, time);
+    _seqNoteOn(step.vel, stepMs);
+  }
+
+  // Lazily capture thumbnail for steps that don't have one yet (e.g. randomised steps).
+  // Double-RAF: first frame lets p5 redraw with the restored state, second frame captures.
+  if (!step.thumbnail && typeof _seqCaptureCellThumbnail === 'function') {
+    const _si = stepIndex;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const url = _seqCaptureCellThumbnail();
+      if (url) {
+        seqPattern[_si].thumbnail = url;
+        if (typeof seqUIRefreshCell === 'function') seqUIRefreshCell(_si);
+      }
+    }));
   }
 }
 
 // ---------------------------------------------------------------------------
-// _seqTriggerChord(vel, durationFraction, time)
-// Fires the notes of the currently selected chord via the Tritonet engine.
-// Delegates to the existing sendNoteOn/Off infrastructure.
+// INTERNAL: NOTE ON / OFF
 // ---------------------------------------------------------------------------
-function _seqTriggerChord(vel, durationFraction, time) {
-  // Use the existing chord trigger infrastructure if available
-  if (typeof simpleplay !== 'undefined') {
-    // Temporarily fire a chord play cycle — mirrors what the manual trigger does
-    // (The actual note arrays are managed by the Tritonet engine in core.js)
-    simpleplay = true;
+function _seqNoteOn(vel, stepMs) {
+  // Apply velocity
+  if (typeof channelVariables !== 'undefined' && typeof channel !== 'undefined'
+      && channelVariables[channel]) {
+    channelVariables[channel].velocity = Math.max(1, Math.min(127, vel));
+  }
+
+  // Trigger chord
+  if (typeof PlaybackOn === 'function') {
+    try { PlaybackOn(); } catch(e) {}
+  } else if (typeof simpleplay !== 'undefined') {
+    simpleplay    = true;
     screentrigger = true;
   }
+
+  // Snapshot the notes that were just played so note-off hits the right keys
+  // (cv.result will be mutated by subsequent steps before the timer fires)
+  if (typeof channelVariables !== 'undefined' && typeof channel !== 'undefined'
+      && channelVariables[channel]) {
+    const cv = channelVariables[channel];
+    _seqActiveNotes = {
+      ch:          channel,
+      result:      cv.result.slice(),
+      bass:        cv.bass,
+      tenor:       cv.tenor,
+      alto:        cv.alto,
+      soprano:     cv.soprano,
+      triton:      cv.triton,
+      tritonleft:  cv.tritonleft,
+      tritonright: cv.tritonright,
+    };
+  }
+
+  // Schedule note-off after gate length (cancel any previous pending note-off first)
+  if (_seqNoteOffTimer !== null) clearTimeout(_seqNoteOffTimer);
+  const gateMs = Math.max(20, seqNoteLength * stepMs - 10);
+  _seqNoteOffTimer = setTimeout(() => { _seqNoteOff(); _seqNoteOffTimer = null; }, gateMs);
+}
+
+function _seqNoteOff() {
+  // Use the snapshot taken at note-on so we silence exactly what was played,
+  // even if cv.result has already moved on to the next chord.
+  if (typeof sendNoteOff !== 'function') return;
+  const n = _seqActiveNotes;
+  if (!n) return;
+  if (n.bass)    sendNoteOff(n.ch, n.result[0], 0);
+  if (n.tenor)   sendNoteOff(n.ch, n.result[1], 0);
+  if (n.alto)    sendNoteOff(n.ch, n.result[2], 0);
+  if (n.soprano) sendNoteOff(n.ch, n.result[3], 0);
+  if (n.triton) {
+    sendNoteOff(n.ch, n.tritonleft,  0);
+    sendNoteOff(n.ch, n.tritonright, 0);
+  }
+  _seqActiveNotes = null;
 }
 
 // ===== MODULE: js/state.js =====
@@ -1810,6 +2299,7 @@ let ResCCresult = [0, 0, 0, 0];
 let ResCCresultpre = [0, 0, 0, 0];
 let ResCCOK = true;
 let anchorshapeFlag = false;
+let _seqSilentMode = false;   // when true, notahesap skips PlaybackOn (sequencer state loads)
 let ResCCsignal = [0, 0, 0, 0];
 let simplescreen = -180;
 let ModeCC = 0;
@@ -2088,6 +2578,16 @@ function initInternalAudio() {
   internalMasterGain.connect(internalAudioCtx.destination);
 }
 
+// Safari requires AudioContext to be created/resumed inside a user-gesture handler.
+// Prime it on the very first pointer interaction so it's ready by the time notes fire.
+(function () {
+  function _primeAudio() {
+    resumeInternalAudio();
+    document.removeEventListener('pointerdown', _primeAudio, true);
+  }
+  document.addEventListener('pointerdown', _primeAudio, true);
+})();
+
 function resumeInternalAudio() {
   initInternalAudio();
   if (!internalAudioCtx) return;
@@ -2118,7 +2618,12 @@ function playInternalNote(ch, note, vel) {
   if (!internalAudioEnabled) return;
   if (note < 0 || note > 127) return;
   resumeInternalAudio();
-  if (!internalAudioCtx || internalAudioCtx.state !== 'running') return;
+  if (!internalAudioCtx || internalAudioCtx.state === 'closed') return;
+  // Safari: context may still be suspended right after resume() — retry after it unlocks
+  if (internalAudioCtx.state !== 'running') {
+    internalAudioCtx.resume().then(() => playInternalNote(ch, note, vel)).catch(() => {});
+    return;
+  }
 
   const voiceKey = `${ch}:${note}`;
   if (internalVoices.has(voiceKey)) {
@@ -4025,7 +4530,7 @@ function voiceleading() {
     Checknote();
   }
 
-  PlaybackOn();
+  if (!_seqSilentMode) PlaybackOn();
   for (let j = 0; j < 4; j++) {
     channelVariables[channel].resultpre[j] = channelVariables[channel].result[j];
   }
@@ -4680,6 +5185,9 @@ function getCircleNoteKey(mx, my, zones) {
 
 // ===================== MOUSE PRESSED =======================================
 function mousePressed() {
+  // Ignore events outside the canvas (e.g. clicks on HTML controls below the canvas).
+  // p5.js attaches handlers to the window so they fire for the entire page.
+  if (mouseX < 0 || mouseX > width || mouseY < 0 || mouseY > height) return;
   currentKeyCode = -1;
   currentKey = '';
 
@@ -4845,7 +5353,17 @@ function mousePressed() {
   screentrigger = true;
 }
 
-function mouseDragged() {
+function mouseDragged(event) {
+  // If the drag target is a native HTML control (slider, select, input),
+  // return without calling preventDefault so the browser handles it normally.
+  // p5.js's return false calls preventDefault() sitewide, which kills range sliders.
+  if (event && event.target &&
+      (event.target.tagName === 'INPUT' ||
+       event.target.tagName === 'SELECT' ||
+       event.target.tagName === 'TEXTAREA')) {
+    return;
+  }
+  if (mouseX < 0 || mouseX > width || mouseY < 0 || mouseY > height) return;
   if (!visual) {
     const zoneKey = getCircleNoteKey(mouseX, mouseY, frozenZoneAngles);
     if (zoneKey && zoneKey !== lastCircleZoneKey) {
@@ -4861,6 +5379,7 @@ function mouseDragged() {
 }
 
 function mouseReleased() {
+  if (mouseX < 0 || mouseX > width || mouseY < 0 || mouseY > height) return;
   lastCircleZoneKey = null;
   frozenZoneAngles = null;
 
@@ -7044,52 +7563,382 @@ window.addEventListener('beforeunload', function () {
     }
 
     // ---- Build the 16 step cells ----
-    function seqUIBuildSteps() {
-      const container = document.getElementById('seq-steps-row');
-      if (!container) return;
-      // Rebuild if count changed or empty
-      if (container.children.length === (typeof SEQ_STEPS !== 'undefined' ? SEQ_STEPS : 16)) return;
-      const steps = typeof SEQ_STEPS !== 'undefined' ? SEQ_STEPS : 16;
-      container.innerHTML = '';
-      for (let i = 0; i < steps; i++) {
-        const cell = document.createElement('div');
-        const isActive = (typeof seqPattern !== 'undefined') && seqPattern[i] && seqPattern[i].active;
-        cell.className = 'seq-step-cell' + (isActive ? ' active' : '');
-        cell.id = 'seq-step-' + i;
-        cell.onclick = () => seqUIToggleStep(i);
-        cell.innerHTML =
-          '<span class="seq-step-num">' + (i + 1) + '</span>' +
-          '<span class="seq-step-chord" id="seq-step-chord-' + i + '">—</span>';
-        container.appendChild(cell);
+
+    // Normalise a Tritonet ChordName string for display in HTML:
+    //   • accnota1 uses "1" for sharp (Tritonet font-specific) → replace with "#"
+    //   • strip extra whitespace
+    function _seqNormaliseChordName(raw) {
+      if (!raw) return '';
+      return raw.replace(/1/g, '#').replace(/\s+/g, '').trim();
+    }
+
+    function _seqStepPopulated(i) {
+      const p = (typeof seqPattern !== 'undefined') && seqPattern[i];
+      return p && p.active && p.stateRow !== null && p.stateRow !== undefined;
+    }
+
+    function seqUIRefreshCell(i) {
+      const cell = document.getElementById('seq-step-' + i);
+      if (!cell) return;
+      const pop = _seqStepPopulated(i);
+      cell.classList.toggle('active', pop);
+      const lbl = cell.querySelector('.seq-step-chord');
+      if (lbl) lbl.textContent = pop ? (seqPattern[i].chordName || '') : '';
+      const thumb = cell.querySelector('.seq-step-thumb');
+      if (thumb) {
+        const url = pop ? (seqPattern[i].thumbnail || '') : '';
+        if (url) {
+          thumb.src = url;
+          thumb.style.display = 'block';
+        } else {
+          thumb.removeAttribute('src');
+          thumb.style.display = 'none';
+        }
       }
     }
 
-    // ---- Toggle a step on/off ----
-    function seqUIToggleStep(i) {
-      if (typeof seqPattern === 'undefined') return;
-      seqPattern[i].active = !seqPattern[i].active;
-      const cell = document.getElementById('seq-step-' + i);
-      if (cell) cell.classList.toggle('active', seqPattern[i].active);
+    function seqUIBuildSteps() {
+      const container = document.getElementById('seq-steps-row');
+      if (!container) return;
+      const steps = typeof SEQ_STEPS !== 'undefined' ? SEQ_STEPS : 16;
+      container.innerHTML = '';
+
+      for (let i = 0; i < steps; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'seq-step-cell';
+        cell.id = 'seq-step-' + i;
+        cell.innerHTML =
+          '<button class="seq-step-del" title="Clear step">\u00d7</button>' +
+          '<img class="seq-step-thumb" alt="">' +
+          '<span class="seq-step-num">' + (i + 1) + '</span>' +
+          '<span class="seq-step-chord"></span>';
+
+        // delete button — stop propagation so it doesn't also audition
+        cell.querySelector('.seq-step-del').addEventListener('mousedown', (e) => {
+          e.stopPropagation();
+          _seqClearStep(i);
+        });
+
+        // mousedown on cell body: capture (empty) or audition (populated)
+        cell.addEventListener('mousedown', (e) => {
+          if (e.button === 2) return;
+          if (e.target.classList.contains('seq-step-del')) return;
+          if (_seqStepPopulated(i)) { _seqAuditionStep(i); }
+          else                       { _seqCaptureStep(i); }
+        });
+
+        cell.addEventListener('mouseup',    () => { if (_seqStepPopulated(i)) _seqStepNoteOff(); });
+        cell.addEventListener('mouseleave', () => { if (_seqStepPopulated(i)) _seqStepNoteOff(); });
+
+        cell.addEventListener('contextmenu', (e) => { e.preventDefault(); _seqClearStep(i); });
+
+        container.appendChild(cell);
+        seqUIRefreshCell(i);
+      }
     }
 
-    // ---- Transport controls ----
-    function seqUIPlay() {
-      if (typeof seqStart === 'function') seqStart();
-      const btn = document.getElementById('seq-play-btn');
-      if (btn) btn.classList.add('active');
+    // ---- State capture / restore using the same mechanism as AddRowToStorageTable ----
+
+    // Build a minimal state-row from current Tritonet globals
+    function _seqBuildStateRow() {
+      return {
+        "Center (G)":      (typeof center      !== 'undefined') ? center      : 3,
+        "Mode Center (G)": (typeof modecenter  !== 'undefined') ? modecenter  : 3,
+        "Chooser (G)":     (typeof chooser     !== 'undefined') ? chooser     : 4,
+        "Anchor (G)":      (typeof anchor      !== 'undefined') ? anchor      : 3,
+      };
     }
+
+    // Restore Tritonet state from a row — mirrors LoadGivenRowFromStorageTableIntoTritonet
+    // but only touches the musical position (center/mode/chooser/anchor), not channel vars.
+    function _seqLoadStateRow(row) {
+      if (!row) return;
+      const savedKey     = (typeof currentKey                  !== 'undefined') ? currentKey                  : '';
+      const savedKeyCode = (typeof currentKeyCode              !== 'undefined') ? currentKeyCode              : 0;
+      const savedSuppAni = (typeof suppressComponentAnimations !== 'undefined') ? suppressComponentAnimations : false;
+      if (typeof suppressComponentAnimations !== 'undefined') suppressComponentAnimations = true;
+      if (typeof currentKeyCode !== 'undefined') currentKeyCode = 0;
+
+      // Silence PlaybackOn for the duration of this state load.
+      // notahesap() will still run (to keep result[] up-to-date) but won't emit audio/MIDI.
+      if (typeof _seqSilentMode !== 'undefined') _seqSilentMode = true;
+
+      // 1. Key center ('1'–'7')  — shouldExecute=false in handleKeyPress, no notahesap
+      const centerKeys = ['1','2','3','4','5','6','7'];
+      if (row["Center (G)"] !== undefined && typeof currentKey !== 'undefined') {
+        currentKey = centerKeys[((row["Center (G)"]) % 7 + 7) % 7];
+        if (typeof handleKeyPress === 'function') handleKeyPress();
+      }
+
+      // 2. Mode center / nightline ('q'–'u')  — force simpleplay so notahesap runs
+      const modeKeys = ['q','w','e','r','t','y','u'];
+      if (row["Mode Center (G)"] !== undefined && typeof currentKey !== 'undefined') {
+        modecenter = row["Mode Center (G)"];
+        currentKey = modeKeys[((modecenter) % 7 + 7) % 7];
+        if (typeof simpleplay !== 'undefined') simpleplay = true;
+        if (typeof handleKeyPress === 'function') handleKeyPress();
+      }
+
+      // 3. Chooser / chord type ('a'–'j')  — force simpleplay so notahesap runs
+      const chooserKeys = ['a','s','d','f','g','h','j'];
+      if (row["Chooser (G)"] !== undefined && typeof currentKey !== 'undefined') {
+        currentKey = chooserKeys[((row["Chooser (G)"]) % 7 + 7) % 7];
+        if (typeof simpleplay !== 'undefined') simpleplay = true;
+        if (typeof handleKeyPress === 'function') handleKeyPress();
+      }
+
+      // 4. Anchor / chord position ('z'–'m')
+      const anchorKeys = ['z','x','c','v','b','n','m'];
+      if (row["Anchor (G)"] !== undefined) {
+        anchor = ((row["Anchor (G)"]) % 7 + 7) % 7;
+        if (typeof anchorshapeFlag !== 'undefined') anchorshapeFlag = true;
+        if (typeof currentKey !== 'undefined') currentKey = anchorKeys[anchor];
+        if (typeof Anchor_fn    === 'function') Anchor_fn();
+        if (typeof AnchorWings  === 'function') AnchorWings();
+      }
+
+      if (typeof _seqSilentMode              !== 'undefined') _seqSilentMode              = false;
+      if (typeof currentKey                  !== 'undefined') currentKey                  = savedKey;
+      if (typeof currentKeyCode              !== 'undefined') currentKeyCode              = savedKeyCode;
+      if (typeof suppressComponentAnimations !== 'undefined') suppressComponentAnimations = savedSuppAni;
+      if (typeof screentrigger               !== 'undefined') screentrigger               = true;
+    }
+
+    function _seqCaptureCellThumbnail() {
+      const canvas = document.querySelector('#tritonet-app canvas');
+      if (!canvas || !canvas.width || !canvas.height) return '';
+      try {
+        // canvas.width/height are physical pixels; simplescreen/screensize are CSS (logical) px.
+        const dpr   = window.devicePixelRatio || 1;
+        const ss    = (typeof simplescreen !== 'undefined') ? simplescreen : 0;
+        const scrsz = (typeof screensize   !== 'undefined') ? screensize   : 1100;
+        // The entire main visual block is wrapped in translate(screensize/6, 0) in drawing.js,
+        // so the actual circle center x (CSS px) = simplescreen + screensize/6 + logicalWidth/2
+        const cx = Math.round((ss + scrsz / 6 + canvas.width / dpr / 2) * dpr);
+        const sz = Math.min(canvas.height, canvas.width);  // largest square that fits
+        const sx = Math.max(0, Math.min(cx - Math.round(sz / 2), canvas.width - sz));
+        const tmp = document.createElement('canvas');
+        tmp.width = tmp.height = 120;
+        const ctx = tmp.getContext('2d');
+        if (!ctx) return '';
+        ctx.drawImage(canvas, sx, 0, sz, sz, 0, 0, 120, 120);
+        return tmp.toDataURL('image/jpeg', 0.82);
+      } catch (e) {
+        console.error('[Tritonet] thumbnail capture failed:', e.message || e);
+        return '';
+      }
+    }
+
+    // Capture current Tritonet state into a step
+    function _seqCaptureStep(i) {
+      if (typeof seqPattern === 'undefined') return;
+      const p = seqPattern[i];
+      p.stateRow     = _seqBuildStateRow();
+      p.anchor       = p.stateRow["Anchor (G)"];    // for _seqStepPopulated check
+      p.chordName    = (typeof ChordName !== 'undefined') ? _seqNormaliseChordName(ChordName) : '';
+      p.vel          = (typeof channelVariables !== 'undefined' && typeof channel !== 'undefined'
+                        && channelVariables[channel])
+                        ? (channelVariables[channel].velocity || 80) : 80;
+      p.triggerChord = true;
+      p.active       = true;
+      p.thumbnail    = '';
+      seqUIRefreshCell(i);
+      const _i = i;
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        const url = _seqCaptureCellThumbnail();
+        if (url) { seqPattern[_i].thumbnail = url; seqUIRefreshCell(_i); }
+      }));
+    }
+
+    // Restore a step's state using the proper Tritonet handlers, then sound the chord
+    function _seqAuditionStep(i) {
+      if (typeof seqPattern === 'undefined') return;
+      const p = seqPattern[i];
+      _seqLoadStateRow(p.stateRow);
+      if (typeof channelVariables !== 'undefined' && typeof channel !== 'undefined'
+          && channelVariables[channel]) {
+        channelVariables[channel].velocity = Math.max(1, Math.min(127, p.vel));
+      }
+      if (typeof PlaybackOn === 'function') {
+        try { PlaybackOn(); } catch(e) {}
+      } else if (typeof simpleplay !== 'undefined') {
+        simpleplay = true;
+        screentrigger = true;
+      }
+    }
+
+    // Randomize: build stateRow objects directly (no _seqLoadStateRow — that sets
+    // screentrigger and leaves notes stuck). Randomizes all four parameters:
+    // key (Center), scale (Mode Center), chord type (Chooser), chord position (Anchor).
+    function seqUIRandomize() {
+      if (typeof seqPattern === 'undefined') return;
+      const steps = typeof SEQ_STEPS !== 'undefined' ? SEQ_STEPS : 16;
+      for (let i = 0; i < steps; i++) {
+        if (Math.random() < 0.3) { _seqClearStep(i); continue; }
+        const p = seqPattern[i];
+        p.stateRow = {
+          "Center (G)":      Math.floor(Math.random() * 7),
+          "Mode Center (G)": Math.floor(Math.random() * 7),
+          "Chooser (G)":     Math.floor(Math.random() * 7),
+          "Anchor (G)":      Math.floor(Math.random() * 7),
+        };
+        p.anchor       = p.stateRow["Anchor (G)"];
+        p.chordName    = '';
+        p.thumbnail    = '';
+        p.vel          = 60 + Math.floor(Math.random() * 60);
+        p.triggerChord = true;
+        p.active       = true;
+        seqUIRefreshCell(i);
+      }
+      // Pre-capture thumbnails for all new steps (async, one at a time)
+      _seqBatchCaptureThumbnails();
+    }
+
+    // Walk through every active step that has no thumbnail, load its state, capture, restore.
+    // PlaybackOn is silenced for the duration so no MIDI/audio fires.
+    async function _seqBatchCaptureThumbnails() {
+      if (typeof seqPattern === 'undefined' || typeof _seqLoadStateRow !== 'function') return;
+      const steps = typeof SEQ_STEPS !== 'undefined' ? SEQ_STEPS : 16;
+      const savedRow = (typeof _seqBuildStateRow === 'function') ? _seqBuildStateRow() : null;
+      const twoFrames = () => new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
+
+      // _seqLoadStateRow sets _seqSilentMode=true internally, so no audio fires.
+      try {
+        for (let i = 0; i < steps; i++) {
+          const p = seqPattern[i];
+          if (!p.active || p.thumbnail || !p.stateRow) continue;
+          _seqLoadStateRow(p.stateRow);
+          await twoFrames();
+          const url = _seqCaptureCellThumbnail();
+          if (url) {
+            p.thumbnail = url;
+            if (!p.chordName && typeof ChordName !== 'undefined') {
+              p.chordName = _seqNormaliseChordName(ChordName);
+            }
+            seqUIRefreshCell(i);
+          }
+        }
+      } finally {
+        if (savedRow) _seqLoadStateRow(savedRow);
+      }
+    }
+
+    // Release the chord triggered by audition (without going through legato logic)
+    function _seqStepNoteOff() {
+      if (typeof sendNoteOff !== 'function'
+          || typeof channelVariables === 'undefined'
+          || typeof channel === 'undefined'
+          || !channelVariables[channel]) return;
+      const cv = channelVariables[channel];
+      const ch = channel;
+      if (cv.bass)    sendNoteOff(ch, cv.result[0], 0);
+      if (cv.tenor)   sendNoteOff(ch, cv.result[1], 0);
+      if (cv.alto)    sendNoteOff(ch, cv.result[2], 0);
+      if (cv.soprano) sendNoteOff(ch, cv.result[3], 0);
+      if (cv.triton) {
+        sendNoteOff(ch, cv.tritonleft,  0);
+        sendNoteOff(ch, cv.tritonright, 0);
+      }
+    }
+
+    // Clear a step (× button or right-click)
+    function _seqClearStep(i) {
+      if (typeof seqPattern === 'undefined') return;
+      const p = seqPattern[i];
+      p.active   = false;
+      p.anchor   = null;
+      p.stateRow = null;
+      p.chordName = '';
+      seqUIRefreshCell(i);
+    }
+
+    // ---- Keyboard → step shortcuts ----
+    // 16 steps mapped to the first three keyboard rows:
+    //   1 2 3 4 5 6 7   → steps  0-6
+    //   q w e r t y u   → steps  7-13
+    //   a s             → steps 14-15
+    const SEQ_KEY_MAP = {
+      '1':0,'2':1,'3':2,'4':3,'5':4,'6':5,'7':6,
+      'q':7,'w':8,'e':9,'r':10,'t':11,'y':12,'u':13,
+      'a':14,'s':15
+    };
+    const _seqHeldKeys = new Set();
+
+    // Track the last button clicked so Space can re-trigger it
+    let _lastClickedBtn = null;
+    document.addEventListener('mousedown', (e) => {
+      const btn = e.target.closest('button');
+      if (btn) _lastClickedBtn = btn;
+    }, { capture: true });
+
+    document.addEventListener('keydown', (e) => {
+      const tag = e.target && e.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      // Space fires the last clicked button (e.g. play toggle)
+      if (e.key === ' ') {
+        e.preventDefault();
+        if (_lastClickedBtn && document.body.contains(_lastClickedBtn)) {
+          _lastClickedBtn.click();
+        }
+        return;
+      }
+
+      if (e.repeat || _seqHeldKeys.has(e.key)) return;
+      const i = SEQ_KEY_MAP[e.key];
+      if (i === undefined) return;
+      _seqHeldKeys.add(e.key);
+      if (_seqStepPopulated(i)) { _seqAuditionStep(i); }
+      else                       { _seqCaptureStep(i); }
+    });
+
+    document.addEventListener('keyup', (e) => {
+      const i = SEQ_KEY_MAP[e.key];
+      if (i === undefined) return;
+      _seqHeldKeys.delete(e.key);
+      if (_seqStepPopulated(i)) _seqStepNoteOff();
+    });
+
+    // ---- Transport controls ----
+    function _seqUISetPlaying(playing) {
+      const btn = document.getElementById('seq-play-btn');
+      if (btn) {
+        btn.innerHTML = playing ? '&#9632;' : '&#9654;'; // ■ when playing, ▶ when stopped
+        btn.title     = playing ? 'Stop' : 'Play';
+        btn.classList.toggle('active', playing);
+      }
+      if (!playing) document.querySelectorAll('.seq-step-cell.playing').forEach(el => el.classList.remove('playing'));
+    }
+    function seqUIPlayToggle() {
+      const running = (typeof seqRunning !== 'undefined') && seqRunning;
+      if (running) {
+        if (typeof seqStop === 'function') seqStop();
+        _seqUISetPlaying(false);
+      } else {
+        if (typeof audioContext !== 'undefined' && audioContext && audioContext.state === 'suspended') {
+          audioContext.resume().then(() => { if (typeof seqStart === 'function') seqStart(); });
+        } else {
+          if (typeof seqStart === 'function') seqStart();
+        }
+        _seqUISetPlaying(true);
+      }
+    }
+    // Keep seqUIStop accessible for blob switches / reset
     function seqUIStop() {
       if (typeof seqStop === 'function') seqStop();
-      const btn = document.getElementById('seq-play-btn');
-      if (btn) btn.classList.remove('active');
+      _seqUISetPlaying(false);
     }
-    function seqUIReset() {
-      if (typeof seqReset === 'function') seqReset();
-      const btn = document.getElementById('seq-play-btn');
-      if (btn) btn.classList.remove('active');
-      // Clear playing highlight
-      document.querySelectorAll('.seq-step-cell.playing')
-        .forEach(el => el.classList.remove('playing'));
+    function seqUIToggleLink() {
+      if (typeof seqLinkActive === 'undefined') return;
+      seqLinkActive = !seqLinkActive;
+      const btn = document.getElementById('seq-link-btn');
+      if (btn) {
+        btn.classList.toggle('linked', seqLinkActive);
+        btn.title = seqLinkActive
+          ? 'Link active (MIDI clock — requires DAW sending clock to this browser)'
+          : 'Ableton Link (requires server bridge)';
+      }
+      // TODO: hook into MIDI clock input when seqLinkActive
     }
 
     // ---- Highlight the currently playing step (called by sequencer engine) ----
@@ -7098,6 +7947,88 @@ window.addEventListener('beforeunload', function () {
         .forEach(el => el.classList.remove('playing'));
       const cell = document.getElementById('seq-step-' + stepIndex);
       if (cell) cell.classList.add('playing');
+    }
+
+    // ---- Pattern blobs: 4 independent pattern banks (A B C D) ----
+    // Each bank stores a deep copy of the 16-step seqPattern array.
+    // Clicking a blob saves the current pattern to the previous bank,
+    // then loads the selected bank's pattern into seqPattern.
+
+    const SEQ_BLOB_COUNT = 4;
+
+    // Each bank stores steps + per-pattern Rate / Length / Direction
+    // Each blob bank stores: steps + per-pattern Rate/Length/Direction + Tritonet global state
+    let _seqBlobPatterns = Array.from({ length: SEQ_BLOB_COUNT }, () => ({
+      steps: Array.from({ length: 16 }, () => ({
+        active: false, anchor: null, triggerChord: true, vel: 80,
+        chordName: '', stateRow: null
+      })),
+      rate:       0.25,
+      noteLength: 0.5,
+      direction:  'fwd',
+      stateRow:   null,   // blob-level Tritonet position (key/scale/chordtype/position)
+    }));
+
+    let _seqActiveBlob = 0;
+
+    function _seqStepsDeepCopy(src) {
+      return src.map(s => {
+        const c = Object.assign({}, s);
+        if (s.stateRow) c.stateRow = Object.assign({}, s.stateRow);
+        return c;
+      });
+    }
+
+    // Save current engine state (steps + params + Tritonet position) into the active blob
+    function seqUIBlobSaveParams() {
+      const bank = _seqBlobPatterns[_seqActiveBlob];
+      if (typeof seqPattern   !== 'undefined') bank.steps      = _seqStepsDeepCopy(seqPattern);
+      if (typeof seqRate      !== 'undefined') bank.rate       = seqRate;
+      if (typeof seqNoteLength!== 'undefined') bank.noteLength = seqNoteLength;
+      if (typeof seqDirection !== 'undefined') bank.direction  = seqDirection;
+      bank.stateRow = _seqBuildStateRow();   // save key/scale/chordtype/position
+    }
+
+    function seqUILoadBlob(index) {
+      if (typeof seqPattern === 'undefined') return;
+
+      // Persist current state before switching
+      seqUIBlobSaveParams();
+
+      // Load target bank
+      const bank = _seqBlobPatterns[index];
+
+      // Restore blob-level Tritonet state (key, scale, chord type, chord position)
+      if (bank.stateRow) _seqLoadStateRow(bank.stateRow);
+
+      // Restore steps
+      for (let i = 0; i < SEQ_STEPS; i++) {
+        Object.assign(seqPattern[i], bank.steps[i]);
+        if (bank.steps[i].stateRow) seqPattern[i].stateRow = Object.assign({}, bank.steps[i].stateRow);
+      }
+
+      // Restore per-pattern parameters
+      if (typeof seqSetRate       === 'function') seqSetRate(bank.rate);
+      if (typeof seqSetNoteLength === 'function') seqSetNoteLength(bank.noteLength * 100);
+      if (typeof seqSetDirection  === 'function') seqSetDirection(bank.direction);
+
+      // Sync UI controls
+      const rateEl = document.getElementById('seq-rate-select');
+      if (rateEl) rateEl.value = String(bank.rate);
+      const lenEl  = document.getElementById('seq-length-slider');
+      if (lenEl)   lenEl.value = Math.round(bank.noteLength * 100);
+      const lenVal = document.getElementById('seq-length-val');
+      if (lenVal)  lenVal.textContent = Math.round(bank.noteLength * 100) + '%';
+      const dirEl  = document.getElementById('seq-dir-select');
+      if (dirEl)   dirEl.value = bank.direction;
+
+      _seqActiveBlob = index;
+
+      document.querySelectorAll('.seq-blob').forEach((el, i) => {
+        el.classList.toggle('active', i === index);
+      });
+
+      for (let i = 0; i < SEQ_STEPS; i++) seqUIRefreshCell(i);
     }
   </script>
 
@@ -7177,6 +8108,7 @@ window.addEventListener('beforeunload', function () {
 
     // After all app scripts load: build keyboard and patch note send functions
     window.addEventListener('load', function () {
+      seqUIBuildSteps();
       kbBuild();
 
       if (typeof sendNoteOn === 'function') {
@@ -7193,6 +8125,121 @@ window.addEventListener('beforeunload', function () {
           return _origOff(ch, note, vel);
         };
       }
+    });
+  </script>
+
+  <!-- Live state info panel updater -->
+  <script>
+    function midiNoteToName(midi) {
+      if (midi == null || midi < 0 || midi > 127) return '—';
+      var names = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+      return names[midi % 12] + Math.floor(midi / 12 - 1);
+    }
+
+    // Interval degrees and semitone offsets for each of the 7 diatonic modes.
+    // Index matches the mode[] array: ["Lydian","Ionian","Mixolydian","Dorian","Aeolian","Phrygian","Locrian"]
+    var SCALE_DEGREES = [
+      ['1','2','3','#4','5','6','7'],     // Lydian
+      ['1','2','3','4','5','6','7'],      // Ionian
+      ['1','2','3','4','5','6','b7'],     // Mixolydian
+      ['1','2','b3','4','5','6','b7'],    // Dorian
+      ['1','2','b3','4','5','b6','b7'],   // Aeolian
+      ['1','b2','b3','4','5','b6','b7'],  // Phrygian
+      ['1','b2','b3','4','b5','b6','b7'], // Locrian
+    ];
+    var SCALE_SEMITONES = [
+      [0,2,4,6,7,9,11],  // Lydian
+      [0,2,4,5,7,9,11],  // Ionian
+      [0,2,4,5,7,9,10],  // Mixolydian
+      [0,2,3,5,7,9,10],  // Dorian
+      [0,2,3,5,7,8,10],  // Aeolian
+      [0,1,3,5,7,8,10],  // Phrygian
+      [0,1,3,5,6,8,10],  // Locrian
+    ];
+    var NOTE_NAMES_DISPLAY = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+
+    var _lastScaleKey = null; // track changes so we only rebuild cells when needed
+
+    function updateScaleRow() {
+      if (typeof anchor === 'undefined' || typeof nota1 === 'undefined') return;
+      var key = anchor + ':' + nota1;
+      if (key === _lastScaleKey) return;
+      _lastScaleKey = key;
+
+      var row = document.getElementById('si-scale-row');
+      if (!row) return;
+      row.innerHTML = '';
+
+      var semitones = SCALE_SEMITONES[anchor] || SCALE_SEMITONES[1];
+      var degrees   = SCALE_DEGREES[anchor]   || SCALE_DEGREES[1];
+
+      for (var i = 0; i < 7; i++) {
+        var pitchClass = (nota1 + semitones[i]) % 12;
+        var cell = document.createElement('div');
+        cell.className = 'si-scale-cell';
+        cell.innerHTML =
+          '<span class="si-scale-deg">' + degrees[i] + '</span>' +
+          '<span class="si-scale-note">' + semitones[i] + '</span>';
+        row.appendChild(cell);
+      }
+    }
+
+    function updateStateInfo() {
+      // Guard: engine globals may not be initialised yet
+      if (typeof nota1 === 'undefined' || typeof anchor === 'undefined') return;
+
+      var _set = function(id, txt) {
+        var el = document.getElementById(id);
+        if (el && el.textContent !== txt) el.textContent = txt;
+      };
+
+      // Key (root note) — use Tritonet's own formula so enharmonics are consistent with the diagram
+      var keyName = '—';
+      if (typeof data !== 'undefined' && typeof transpose !== 'undefined'
+          && typeof acc !== 'undefined' && typeof center !== 'undefined'
+          && typeof accnota !== 'undefined') {
+        keyName = data[(transpose + 3) % 7] + accnota[acc[center]].trim();
+      }
+      _set('si-key', keyName);
+
+      // Scale / mode
+      var modeName = (typeof mode !== 'undefined') ? (mode[anchor] || '—') : '—';
+      _set('si-mode', modeName);
+
+      // Harmony type
+      var harmName = (typeof harmonie !== 'undefined' && typeof ctrl1 !== 'undefined')
+                     ? (harmonie[ctrl1[1]] || '—') : '—';
+      _set('si-harmony', harmName);
+
+      // Voicing
+      var voiceName = (typeof voicingtype !== 'undefined' && typeof ctrl2 !== 'undefined')
+                      ? (voicingtype[ctrl2[1]] || '—') : '—';
+      _set('si-voicing', voiceName);
+
+      // Channel
+      _set('si-channel', typeof channel !== 'undefined' ? 'ch ' + (channel + 1) : '—');
+
+      // Chord notes
+      if (typeof channelVariables !== 'undefined' && channelVariables[channel]) {
+        var r = channelVariables[channel].result;
+        _set('si-note-bass',    midiNoteToName(r[0]));
+        _set('si-note-tenor',   midiNoteToName(r[1]));
+        _set('si-note-alto',    midiNoteToName(r[2]));
+        _set('si-note-soprano', midiNoteToName(r[3]));
+        // Raw result[] integers
+        _set('si-raw-result', '[' + Array.from(r).join(', ') + ']');
+      }
+
+      // Raw scale[] integers (engine circle-of-fifths order)
+      if (typeof scale !== 'undefined') {
+        _set('si-raw-scale', '[' + Array.from(scale).join(', ') + ']');
+      }
+
+      updateScaleRow();
+    }
+
+    window.addEventListener('load', function () {
+      setInterval(updateStateInfo, 100);
     });
   </script>
 

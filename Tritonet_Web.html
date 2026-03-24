@@ -7593,10 +7593,12 @@ window.addEventListener('beforeunload', function () {
 
     // Normalise a Tritonet ChordName string for display in HTML:
     //   • accnota1 uses "1" for sharp (Tritonet font-specific) → replace with "#"
+    //     but ONLY when the "1" appears right after a note letter (A–G) with optional flats,
+    //     so that digit "1" inside chord types like "(#11)" or "7(11)" is left untouched.
     //   • strip extra whitespace
     function _seqNormaliseChordName(raw) {
       if (!raw) return '';
-      return raw.replace(/1/g, '#').replace(/\s+/g, '').trim();
+      return raw.replace(/([A-G]b*)1/g, '$1#').replace(/\s+/g, '').trim();
     }
 
     function _seqStepPopulated(i) {
@@ -7775,17 +7777,14 @@ window.addEventListener('beforeunload', function () {
       p.triggerChord = true;
       p.active       = true;
       p.thumbnail    = '';
-      p.chordName    = '';     // filled in the RAF callback once draw() has run with current acc[]
+      // Read chordName synchronously — draw() runs at 60fps so ChordName is always
+      // current at click time and acc[] reflects the exact state being captured.
+      p.chordName    = (typeof ChordName !== 'undefined') ? _seqNormaliseChordName(ChordName) : '';
       seqUIRefreshCell(i);
       const _i = i;
       requestAnimationFrame(() => requestAnimationFrame(() => {
         const url = _seqCaptureCellThumbnail();
-        if (url) { seqPattern[_i].thumbnail = url; }
-        if (typeof ChordName !== 'undefined') {
-          const cn = _seqNormaliseChordName(ChordName);
-          if (cn) seqPattern[_i].chordName = cn;
-        }
-        seqUIRefreshCell(_i);
+        if (url) { seqPattern[_i].thumbnail = url; seqUIRefreshCell(_i); }
       }));
     }
 
@@ -7809,6 +7808,17 @@ window.addEventListener('beforeunload', function () {
         simpleplay = true;
         screentrigger = true;
       }
+      // Lazily correct chordName after draw() has a chance to run with the restored acc[]
+      const _i = i;
+      requestAnimationFrame(() => {
+        if (typeof ChordName !== 'undefined' && typeof seqPattern !== 'undefined') {
+          const cn = _seqNormaliseChordName(ChordName);
+          if (cn && cn !== seqPattern[_i].chordName) {
+            seqPattern[_i].chordName = cn;
+            seqUIRefreshCell(_i);
+          }
+        }
+      });
     }
 
     // Randomize: build stateRow objects directly (no _seqLoadStateRow — that sets
@@ -7850,25 +7860,28 @@ window.addEventListener('beforeunload', function () {
       try {
         for (let i = 0; i < steps; i++) {
           const p = seqPattern[i];
-          if (!p.active || p.thumbnail || !p.stateRow) continue;
+          if (!p.active || !p.stateRow) continue;
+          const needsThumbnail = !p.thumbnail;
+          // Skip if we already have both thumbnail and chordName (nothing to update)
+          if (!needsThumbnail && p.chordName) continue;
           _seqLoadStateRow(p.stateRow);
           await twoFrames();
           // After two frames, draw() has run with the restored state (including correct acc[]).
-          // Persist the computed acc[] back into stateRows that don't have it (randomized steps)
-          // so future loads can correctly restore accidentals.
-          if (!p.stateRow["acc"] && typeof acc !== 'undefined') {
-            p.stateRow["acc"] = acc.slice();
-          }
           // Always (re)compute chordName from ChordName, which now reflects the correct acc[].
           if (typeof ChordName !== 'undefined') {
             const cn = _seqNormaliseChordName(ChordName);
             if (cn) p.chordName = cn;
           }
-          const url = _seqCaptureCellThumbnail();
-          if (url) {
-            p.thumbnail = url;
-            seqUIRefreshCell(i);
+          if (needsThumbnail) {
+            // Persist the computed acc[] back into stateRows that don't have it (randomized steps)
+            // so future loads can correctly restore accidentals.
+            if (!p.stateRow["acc"] && typeof acc !== 'undefined') {
+              p.stateRow["acc"] = acc.slice();
+            }
+            const url = _seqCaptureCellThumbnail();
+            if (url) p.thumbnail = url;
           }
+          seqUIRefreshCell(i);
         }
       } finally {
         if (savedRow) _seqLoadStateRow(savedRow);

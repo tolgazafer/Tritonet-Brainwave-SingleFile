@@ -471,13 +471,31 @@
       border: 2px solid rgba(255,255,255,0.5);
       cursor: pointer;
     }
+    #seq-playhead-bar {
+      display: flex;
+      flex-direction: row;
+      padding: 4px 8px 0;
+      gap: 3px;
+    }
+    .seq-playhead-pip {
+      flex: 1;
+      min-width: 40px;
+      height: 5px;
+      border-radius: 3px;
+      background: var(--panel-ctrl-border);
+      transition: background 0.05s;
+    }
+    .seq-playhead-pip.playing {
+      background: #fff;
+      box-shadow: 0 0 4px rgba(255,255,255,0.6);
+    }
     #seq-steps-row {
       flex: 1;
       display: flex;
       flex-direction: row;
       align-items: stretch;
       overflow-x: auto;
-      padding: 5px 8px;
+      padding: 3px 8px 5px;
       gap: 3px;
     }
     .seq-step-cell {
@@ -490,7 +508,7 @@
       border: 1px solid var(--panel-ctrl-border);
       border-radius: 4px;
       background: var(--panel-group-bg);
-      padding: 3px 2px; min-height: 80px;
+      padding: 3px 2px; min-height: 60px;
       cursor: pointer;
       user-select: none;
       gap: 2px;
@@ -1212,6 +1230,9 @@
             <button class="gui-btn" id="seq-link-btn" title="Ableton Link (requires server bridge)" onclick="seqUIToggleLink()">&#9741; Link</button>
           </div>
 
+        </div>
+        <div id="seq-playhead-bar">
+          <!-- Playhead pips built by seqUIBuildSteps() -->
         </div>
         <div id="seq-steps-row">
           <!-- Step cells built by seqUIBuildSteps() -->
@@ -7601,6 +7622,18 @@ window.addEventListener('beforeunload', function () {
       const container = document.getElementById('seq-steps-row');
       if (!container) return;
       const steps = typeof SEQ_STEPS !== 'undefined' ? SEQ_STEPS : 16;
+
+      // Build playhead pips
+      const pipBar = document.getElementById('seq-playhead-bar');
+      if (pipBar) {
+        pipBar.innerHTML = '';
+        for (let i = 0; i < steps; i++) {
+          const pip = document.createElement('div');
+          pip.className = 'seq-playhead-pip';
+          pip.id = 'seq-pip-' + i;
+          pipBar.appendChild(pip);
+        }
+      }
       container.innerHTML = '';
 
       for (let i = 0; i < steps; i++) {
@@ -7907,7 +7940,10 @@ window.addEventListener('beforeunload', function () {
         btn.title     = playing ? 'Stop' : 'Play';
         btn.classList.toggle('active', playing);
       }
-      if (!playing) document.querySelectorAll('.seq-step-cell.playing').forEach(el => el.classList.remove('playing'));
+      if (!playing) {
+        document.querySelectorAll('.seq-step-cell.playing').forEach(el => el.classList.remove('playing'));
+        document.querySelectorAll('.seq-playhead-pip.playing').forEach(el => el.classList.remove('playing'));
+      }
     }
     function seqUIPlayToggle() {
       const running = (typeof seqRunning !== 'undefined') && seqRunning;
@@ -7947,6 +7983,11 @@ window.addEventListener('beforeunload', function () {
         .forEach(el => el.classList.remove('playing'));
       const cell = document.getElementById('seq-step-' + stepIndex);
       if (cell) cell.classList.add('playing');
+
+      document.querySelectorAll('.seq-playhead-pip.playing')
+        .forEach(el => el.classList.remove('playing'));
+      const pip = document.getElementById('seq-pip-' + stepIndex);
+      if (pip) pip.classList.add('playing');
     }
 
     // ---- Pattern blobs: 4 independent pattern banks (A B C D) ----

@@ -485,8 +485,8 @@
       position: absolute;
       top: 0; bottom: 0;
       width: calc(100% / 16);
-      background: #fff;
-      box-shadow: 0 0 6px rgba(255,255,255,0.7);
+      background: var(--panel-ctrl-bg);
+      box-shadow: 0 0 6px color-mix(in srgb, var(--panel-ctrl-bg) 70%, transparent);
       border-radius: 3px;
       left: 0;
       transition: left 0.08s linear;
@@ -522,8 +522,8 @@
       background: var(--panel-header-bg);
     }
     .seq-step-cell.active {
-      background: var(--panel-toggle-on);
-      border-color: #3a6a3a;
+      background: var(--panel-header-bg);
+      border-color: var(--panel-ctrl-border);
     }
     .seq-step-cell.playing {
       background: var(--panel-ctrl-bg);

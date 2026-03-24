@@ -294,7 +294,11 @@
       font-family: var(--panel-font);
     }
     .seq-gen-btn:hover { background: var(--panel-bg); }
-    .seq-gen-btn.active { background: var(--panel-toggle-on); }
+    .seq-gen-btn.active {
+      background: var(--panel-ctrl-bg);
+      color: #fff;
+      box-shadow: 0 0 6px color-mix(in srgb, var(--panel-ctrl-bg) 70%, transparent);
+    }
 
     .pattern-gen {
       flex: 1;

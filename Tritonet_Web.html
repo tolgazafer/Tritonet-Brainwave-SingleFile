@@ -561,13 +561,13 @@
     .seq-step-cell.active   .seq-step-num { display: none; }   /* hidden when populated */
     .seq-step-cell.playing  .seq-step-num { display: none; }
     .seq-step-chord {
-      font-size: 13px;
-      font-weight: bold;
+      font-size: 11px;
       color: var(--panel-text);
-      font-family: var(--panel-font);
+      font-family: 'TritonetEmbedded', var(--panel-font);
       text-align: center;
       line-height: 1.2;
       white-space: nowrap;
+      overflow: hidden;
       position: absolute;
       bottom: 3px;
       left: 0; right: 0;
@@ -7591,14 +7591,13 @@ window.addEventListener('beforeunload', function () {
 
     // ---- Build the 16 step cells ----
 
-    // Normalise a Tritonet ChordName string for display in HTML:
-    //   • accnota1 uses "1" for sharp (Tritonet font-specific) → replace with "#"
-    //     but ONLY when the "1" appears right after a note letter (A–G) with optional flats,
-    //     so that digit "1" inside chord types like "(#11)" or "7(11)" is left untouched.
-    //   • strip extra whitespace
+    // Normalise a Tritonet ChordName string for display in the Tritonet-font HTML label.
+    // The cell uses 'TritonetEmbedded' so accnota1 characters render natively:
+    //   "1" → ♯  "b" → ♭  "x" → ×  "bb" → 𝄫  " " → natural (empty slot)
+    // We only trim surrounding whitespace — internal spaces are intentional.
     function _seqNormaliseChordName(raw) {
       if (!raw) return '';
-      return raw.replace(/([A-G]b*)1/g, '$1#').replace(/\s+/g, '').trim();
+      return raw.trim();
     }
 
     function _seqStepPopulated(i) {

@@ -46,12 +46,15 @@
       overflow: hidden;
     }
 
-    /* Main row: canvas fixed + teacher panel fills remaining space */
+    /* Main row: full-width, canvas centred inside */
     #tritonet-main-row {
       display: flex;
       flex-direction: row;
       height: 734px;
       flex-shrink: 0;
+      position: relative;       /* anchor for absolutely-positioned corner buttons */
+      justify-content: center;  /* centre the 1100 px canvas */
+      background: #000;         /* background extends to full screen width */
     }
 
     /* p5.js canvas host — fixed to match createCanvas(1100, 734) */
@@ -104,12 +107,11 @@
     }
     #tutor-backdrop.open { display: block; }
 
-    /* Toggle button — overlaid in the top-right corner of the canvas */
-    #tutor-toggle-btn {
+    /* ====== CORNER TAB BUTTONS (float over the full-width main row) ======= */
+    .corner-tab-btn {
       position: absolute;
       top: 10px;
-      right: 10px;
-      z-index: 100;
+      z-index: 300;
       background: var(--panel-group-bg);
       border: 1px solid var(--panel-ctrl-border);
       color: var(--panel-text);
@@ -121,12 +123,36 @@
       opacity: 0.85;
       transition: background 0.15s, opacity 0.15s;
     }
-    #tutor-toggle-btn:hover { background: var(--panel-header-bg); opacity: 1; }
-    #tutor-toggle-btn.open {
+    .corner-tab-btn:hover { background: var(--panel-header-bg); opacity: 1; }
+    /* active (panel open) state — shared by .active and .open class variants */
+    .corner-tab-btn.active, .corner-tab-btn.open {
       background: var(--panel-ctrl-bg);
       color: #fff;
       box-shadow: 0 0 6px color-mix(in srgb, var(--panel-ctrl-bg) 70%, transparent);
       opacity: 1;
+    }
+    #panel-toggle-btn { left: 10px; }
+    #tutor-toggle-btn  { right: 10px; }
+
+    /* Chord symbol display — centred at the top of the full-width row */
+    #chord-display-tab {
+      position: absolute;
+      top: 7px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 300;
+      background: rgba(0,0,0,0.45);
+      border: 1px solid var(--panel-ctrl-border);
+      color: #e8e8e8;
+      padding: 2px 16px 3px;
+      border-radius: 3px;
+      font-size: 20px;
+      font-family: 'TritonetEmbedded', var(--panel-font);
+      min-width: 70px;
+      text-align: center;
+      opacity: 0.9;
+      pointer-events: none;
+      white-space: nowrap;
     }
     #teacher-panel-header {
       background: #c8c8c8;
@@ -1073,9 +1099,6 @@
 
         </div><!-- end #gui-panel -->
 
-        <!-- AI Tutor toggle button (top-right corner of canvas) -->
-        <button id="tutor-toggle-btn" onclick="toggleTutor()" title="AI Teacher">AI</button>
-
         <!-- MIDI Output Dropdown -->
         <div id="main-midiout-wrapper">
           <button id="sound-toggle-btn" onclick="toggleInternalAudio()" title="Toggle Internal Audio"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfQAAAH0CAQAAABh3xcBAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAmJLR0QA/4ePzL8AAAAHdElNRQfpCAwLATMtp6slAAAreElEQVR42u2deXxU1fn/n3MnCVuSmTsJsq8iuGDBhbIIaFEQLYgLi7gguFttBa2KxSpWrdrFirjRoqKoiFSEoq0buLCroOCCgqyFsCSZO5MEAknmnt8ffvv6aYtm5jzPzL2T+bz/Tc5zz33mfu7znHPPOQ8RAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFmNgguyncJwYIjqo7tSe2pCNapEb1ar9DvODngGQgcNhODp1iQaQrn/8wdNq2i6M4/q4KPv0rFxxZHUjgrcmkBJzdbKMggd+B67Oz1GA3/0X75Wv4y8DU8RERV2scaqn9OJ33spbqbF7suxd8mF0IFPCV+tp1NeAv84u9k1O6uz21ehnmoqDSfrB/68Qd8ffZ40hA78RiP7Kbo44f9eqoZFKrI4WX9A30CBev5teeDyso0QOvBTEhoOvFpPyv7frG4yqORAVsbyDupVOiGhf63U46Pz/XsnATz42UXwyMASOinJRm3jx1TPyz5fFXfT71K3RLMkNbLprupPIHTgA4p6q3eog0HDY5qWVK/JLl8d0aLufWqfRAOLhjVef/ArpO7AY8Ij9XPUxLBxZW2Xqn1Z5CzLfo8GJN1qv+od+cKXt4PHP1uwb9FzjWVOVJB3e1a9FCcayJyomf57cQEiOvBsiGZPo+uZNqoCrcsqs8NdBUU5mylo2PhlZwzG6MADigsazaeL2Gby3E0HP80OjzWbQoONGx/X2Dm4Gqk7SLfMW8ffo7NETJ2dJS7LoQmsNPlPdn8IHaSVUI/4ajpRaJx3anb4LHgqtWYZyKU5+c0hdJA2woPV+9RWzFxzvz2+KRLFELaJtjkv+EtbEHpDlvkV+nXjKaXD57RtssFvWiADUoPDd0HoIA2/rP2gnnmYDag8CrPBdaqbhBV9R3gohA5SSyP7ebo1BbEuNyu8F5bRln4+3BZCBymjoMh+m8bCD+avSSE7RTTLLytVIPQGR/DIwAqjVV3gP1SJZUCnhydC6CAVWWdfa6XqCj+w2C042Pm9fTyEDqRlPkovoebwAw+1QdBYY5otNhSA0AERUehG/RI1hh/YLBe11sO+F0IHUuTYT6iH8XuKRPR/CRu8KfQzCB0IUFxg/4OuhR9kKN+gP5RVmZpdGIbQAZOiNvEPhLatgG9j+nRhg20Cj0LogDcy7+Guop7wgyTOHPpc2ORY+yIIHRgTHqqWUlv4QZg4XSdeluGx4lYQOjCT+dV6ERXADymI6cvoD9KpV910CB0kTyD8sJ5BOXBEiqR+hxYuR6UuCJ0HoYOkaNHMfkXfCD+kMn3Pu5RKhKX+WCgEoYOEad7y0Ls0An5ILfv2qpFUK2qylbofQgeJjsyPq1upesEPqSeykqYIm7zaHgChgwQIDtLLqCP8kKaR+p+UbEU1S8/s2BhCB/UQGm/9i0LwQ9rQ1nj6WnSc3rXidggd/OgzEp6qnk6oqjkQo6ySRpNoLVn9m1APCB38EHn2c/ou1NbxIH1fr34lajBHzUh36RQIPVNG5rb9Jl0CP3hD5Cl6QdRgb/tqCB38r8w7WSvoNPjBQ66n7aL27i0ogtDB9yjqHVhFR8MPnqbvMbqE4oIGw7l3QujgO4TOd5foI+AHz6W+jP4saU//Ip2nyUHofpf5jWoeNYUffCH1O/RHguZy1MMQOiAiCtiP4ngoH1EbuIyqBWP6oNAICD3raZ5vL6Dr4Qc/Ub5Biy52UQ+l64RYCN2nFLeKv0fD4Ae/EX2EJI+O7GxPTE+/sfzCl9jd6XVq779+uWfEFvt/wBM8zTpd9dadqA3lUQXt1BusldZrZUILWYvauOtJ7qjHykC3st0QelYSHqznyZY7zhah5zfP+yVdc/hvFGqNfsh5mer4VwldpmYJSnBWZAJS92yU+eXSVc2zhEBoYu43+rc/9ClSn0Qv2Gvt/gLp+3P6Hblu63HBkyH0bEOFp+qnKBeOSJbmLe131F/qrd9+PL0fvpu9zlzrawS3uVjWfRB6dtHIfl7fBTckT7BT3fIElwhb+k77Fe5cd2wLTRXs/pDUV3KB0H1DYdh+my6CHwwGO+2sZdQ5iQYjQs9zn3znL2qNYCJ3H4SeLTEJVc0NadtEL6LWSQprpH0P87J17lUSE3v/R197OISeDTGpr7WSusEPJhy4n0yOcZgcPJ133egn9JDgbdyXWi1C6D7AHqvfRVVzM0I99C/NnnzrWW7hw2ZTabPYjRxvj4HQG/ajeiM9n66FkA0PdY/xM9zGmsG79s5qS7CCrbo7lcU4IHRvQVVzFsFO9HOGtEaGLuNdv/wd/YrUveijwhMg9AYJqpqzo+A43hOspgc7M7vwazooJvU7U3cQNITuGahqLiD0oUwDBdbzvIQ5uk39SetW2lZcB6E3MOyfoKo5m0bEXzzaN8SsxZL7AO0Ui+m3piqmQ+ieED6TlqGqOftl2VVi+krdETqB037vfposdkstY+Mh9IYj86v1a6hqLiDRViJmctQzvN0Fzou0VOymbknN3DuEnvanMzwVVc1lcPOFDPWwb+Zl3O5N5Ar1pbM9CkLPeDo2tl/CthWxd+YhMVNTi47hNI99rGeJ9WVyKk6JgNDTSPOW0Q9oNPwgJvRyMVON3Cd58sqdQpVCffmJfRaEnskj82NR1VyWuGSV04H2NZzmpXsED2++DULPWIKD9HJUNZcl5tBWQXMPhlnfQfSfSSrDGBjuB6FnJKHLUNU8JbwlaKtQP8Zp7sToD1Jd0ZMh9AwcSoanqmdQ1TwVuC+LmjvHPpvTvNl02iXUk2F2dwg9s8izn0VV85Ql7++S5Did1MOcfYQ7q+n3Uh2hWyD0TBqZ2/abdCn8kDI0/U7U3FH2JFb6/jfaItSVC49oAaFnisw7WctR1Ty1OC/RSlGDU1hTcrX6bqlMsPZyCD0jKOqtVtIx8EOqh+mB8YJHLxPl6z9ymkdfoC+EenIt+1hqCD31hM5zl6gW8EPqKdsoPJ4dEzqV0Tqu7xTqR/vQcAjd7zK/Uf0dVc3Tlr4/Qa8LmlPqEc5ehOirYjH9egjdz6CqebrRtRNoj6C9n7AOddJa6Hu6OiN8HITuU1DV3AuqStUE0oJvjqmtGflYdA5tF+rHNRC6L0FVc6+IvEEzBM21rv4Vo3WtljrxfXy4EEL3HXb3+Cp9EvzgDU1uFl08cxvn1PemM6lUpBcF+mII3WeEB9Myag8/eEXJATVe7PgHolDgdk5f9HShftwgs6oSQpeSOaqae5++r6InBM3dEG7HGF0/KrQ//Vj7FAjdL6CquU/Iu01w42pjYqxyizn6r0L9GAeh+wNUNfcNe/fTDXLW9Ljwseatcx4imaOuRrdtAqF7TmHYfgtVzf2D8096XsxYQN9h3rishOaK9CK4fwSE7jHBIwMraCD84CfqJgnNeBMRjS7uyhDXY0K9uAxC9xRUNfcjlWVa7sy1gMuYey//UH8k0osh4bYQuncyH6kXo6q5H4nOolVi4/SLg50YzWViuqXHQugeEbpRz6Um8IMv0e71Yl/Ucy1GfhB9Se3zR/IOoZuAquY+J7ZWPy1m7PJQB+O2h4T6cVzwRAg9zTTPtxeiqrnfiU8WO3w5V3EKNj1BcZHJgssg9LRS1KZuKZ0NP/idynKSW9twZf4Rpk2dHTJ75fVY3oIsCD0pUNU8c3CepM+FTDXJuc68sZKZkGtuD4HQ00T4TFqKquaZk73Tb6RMqWvNj4GOvK02icT081l3gOchYZlfpR/P9nLH7hmxxSK+LKTe+gRqSy2IaC/tVJ/Q6khFCjKwD2iAjCU9PvqsadvQHeoegS6UOy2pDkJPLSp8F9aziwjdCp+vJ9AZ/1O5pobeUc9E5gtuNCWicD+9XMjUJ47xvHeog9oikTtzvI/UPQE6NrbnQOYShEaEv9Lz6OzDFKjKo7P1vPBXoRGS14usoAVCpk4wPxs2ul29J9EF6wKM0VNIQXHsHRoDP7DT6GBonlqgj/rRBPkotSA0zxbc16+myHzeIlITGbH4OZEunGuuVwi9HgqPyl1Bp8APXIKd6WM1MiFBjaSPg53FYvqXepaQqeHmvcp9haoEetDK7gehp+bxHBT48MdjEEjoddnFWkpdEv73LtbSwi5iF7+XakXsBJTx6b6lVTRfogvmM+8Q+o+NKFHVXOZ1aQdeo9ZJNWkdeC1oy1w9uk29IJS8jzP/yOY+K9KD802nz0Vm3Vs0qx1K/fUJ1L6BySKErxL/9bgazfvaL9Mog4vNc0bL9Lq4a/xLmTpmakzEtCK7ZW+VODrU7RX72KQd+7tw+Di6uWYMyg+BH3xbnmckc6JR4dHGsvoeZRvtuTKnALlXkmmPXJpNU/g9sC4gI6GzUvfCsD1Dr9cTIHPww6FE3W88Ip0WEsoQ1e9lvs+r0xm7018SuZVz0j5GL+oVWENXY5QPfjTjG8E4g6elekCmF5Ev1AIRQ1bAuCqb8zl9JdCDY80OoTaWaXiUu4w64kEG9UTlK1jNr7b7y/Qjfp/Q/UxgjPZfFenCkDQKPXS+nnOY1U0AfI/m+XQ6L1emGTLn5cfW0vsit9TWHmo8wpf5xHZm2oQeOkHNlpnFBA2beH92ODg2JFSbVj8sNN6/3Phls0akyurpJtozEXoj9Rym30BC4jpeQFh3N28p0ZfoP2izyD2dbbxEV2uJmB4uOjktQg/dQt3xCIOE6Chgo7DubpG+uPpRETuN9bnGLy2R5D0+NA1CD9rq13h+QaKPi4iVK4MnS5jJeYpiIsn7haYtnRW0W+D6Q9Ig9MB41AwFiSerIlaswIMSZsoq1TMi/Tkj3/Q8f1dk2+xPk19fkLTQ9WV4ekHCCJ0aoweFh0jYqXtc5NWTkzvStKklkbznWGekWOhFbegneHpBwmwTSw3+ILE0q2ITfSDSHePKKeUfSGxY1UNSLHR9CrZ5gCRGk5+JmeoRHiliZ6aIlVOMq6HV0HsSg4dUp+7H4uEFiRNYRjVSttx7JI7mbPYKORKzBoYbdYiI3hS4fqfi1ikVum6NhxckTmkVLZaypbqGLuZb2VlNIrvTtfHZdoG3RF77/VMqdCrAwwuSkudTgrbuEFmP+TeRzvQvKDJrWLaRtkgMHlKrdCx8BUkRWUhfixnrIjFOd9aLVC0P5Biveae3/C90AJKjTv9GzpieIjIZPFukM8ON70JA6LpH83wIHfiI6Hz6p5ix40Pn8I3kzhM5Anqo6b46tUTguMoctw+EDvzFdSKHHX8rEoEF2KV7RAoqBIsMSzo4MVrNv3z8FAgd+Apnh5Krc9NfZN37HJGBhHny/na6R+kQOkgDkUdorZQta5JANJwv8X1fDzNuulQgt+mTzNQ4hA7SQZ26QWiDC9Eos1PTvkvMEVm20tm0dkv+KoEXTUGwB4QO/BbTV8qky0SUq68TsCJyJmvA8KCsndX6U4Hcph+EDnyHdSvtl7GkLxc4R+51keR9kHHTZQJX7wmhA99Rvkv/UcaSahFmF1d2YkpinDzI9Lu+tULg6idA6MCH5P5Z7xWK6VfxbbiLBPpxhG14rFqOQESn7okfvQmhg7RRWkX3C5kaHDySbWOByCvHMHnft5e+YV88zz4aQgc+JPqkyIHHRMqawO7LdvpcoCPG59artI7SIXSQTg4poYopdInAqneB5J0GGu+SX86/uHUChA58SeRZ+reIoQ78Yk1KQujBkOnZ9SsR0UHDpYb+IGSJfQxF5EOKCiTvfQyv/hUdYF+8Z6J5DYQO0kxwJu0RMTSKXe4pLnJUZB/Tq2v+HEEo1AFCB75k20GSqZgSDg3lmtBLBPrR2zgX+FTg6j0hdOBT6mZQtYQddQHbgoTQuxaGDVsKCN2C0IFfqSzTIgc00jncpbDO5wJLeFTAMKZLRHR9NIQOfIuaJmImFBzI1Yl6V+BuDIWeu17gpJujIHTgW5zPJb4iE1nnskUqIHRtOB23dz9tEhC6gtCBb9F/FTEzgrtsRgtsLqFexi35yXtBcUsIHfiW/HkiFVPa2ccxc4svBQpBhovaeCZ0qjsKQge+ZWc1vSgy2j+TacBVAqe8a9PVcQK16ayuEDrwMUqmNBK7nLJeJdALwxrD8U0C1+4CoQMfE1mpBB5zGti2CdOCwNHLZBjRK7byT3hXiOjA50ic29b4wACegVoPhU51eis7okPoIAuETvo0XvuqfQJFD482rtrCz2qOTETFEDrwLnn/UqQA4wCuAYEVao3CXT0TeuNQOwgd+JtXBWz06tiYaUFg7tt03l1vFPBAJwgd+BprgYCRRrFePhB6F0MPCExIqjYQOvA15R+KnAvLTN4tia/ZhkKX+MBGrSF04G+0kig32IfXvOwbfmkJbVicKfpv/pZdBaED3yv9LQEjJzHbu/pLdh+6mF6bfy6uRuoO/E7u2wLFF1sXt/J8lN6yRTPDeLyLfW0IHfid0j3Ej6YUZ8Z0xZ/7VjWGybvmCx2pO8gAJAoZcIW+RaAPprVjSgSEriB04HcETmK1evDau98I9MFU6PyInpdfDKEDn6MEhK6PYYp0s8CNtDfsOz+iU05rCB34nMhOgZjWhXfGe6SCStkvG8MJwQD/7hNYMgOhA+9Zww9pdlemBX5MNxS6RERXrSB04Hv0GoFH/VjPhd7SrFlkN7nsa9sQOvD/KF1A6G43pgF+6UfTb/l1xF4GrEMQOvC/0NfxbVidmFLZze5Cs3ChYUv+en8IHfifyE6KsY104DW3+EInyzSmR9mXDkLoIBP4ip28dvQ8olOdd0JHRAcZkbzzl8G2owCneVyglLPVwvDu+ULHZBzIBATOWcm123CaNxGI6PVPiSF1B9nNdr4JqyWn9d79AhVbTCfj+DMUSN1BRqTu2/g23BZMA2Wpj6s/0HOM0UF2YAkIXXGFHvNK6AKpe359x01D6MAHlO2hGvYImSv0aAYLnQqCEDrwP5r2sW1kc0Sn3CYQOsiEUTp/dZjN7IFnQteVfP/F8yB0kAkhnf8du5DZ3jOhWzV8/+VgjA4ygvIGIHTDuq5WLd99LiI6yAjYX7FVATOnYJ/tblposU4goruI6CAjYI9TXabQVa1XQg8IRPQAhA6yJKI3Zb4oPBN6jkRER+oOMgF+4qxzee0VX26G59YdlIjoEDrIBPiJs+IKvc6riJ4nMRmH1B1kh9CJKXTvUvcygdRdQ+ggE3A9F7pA6m7aA4GIbiF1BxkR0eP8YaoPeqCM2rkChSYDEDrIALhTafy4KNCDOkPB5hi+IJLIiCB04AushiB0w+S/Lf/K9Q48IHSAiO7xq2Z/noDQEdFBRgg9z2uhe/eqqROI6HEIHWQE+dkr9EYCQreQuoNMQBWyTTBXy1v8nMJwjF6XB6GDbKHAa6F7N3hwkbqDrCHItsDdFsN/1RhG9BxMxoGsoSXXgOYK3Wb3oMq7iB5A6g4ygiPYo1TujnZ+RDd81QQa8d1Xi4gOMgLuGa6kuQUY+IMHw8OoNP/K9e5ph9CBH8ijIvYolXuObMgroQtcud6TZCF04AMK2/NXe7PPkfVM6DrMvnI8AqED/6M6CNjgloBgJ9CW6XQgfw1BRX3baSB04AMCnQSSV15EV/zpQONiifxcwqn3JYSHDHiP7si3UVfCaV0QJvbXbOOInoZBA4QO/CL0o9kmKitZJSByWvHvwo14JvQohA4yYYx+LNvENmYPWgsMQEq8ErpC6g4ygFzq4rXQXYGIrnd7JfT6ZwcgdOA54a7EXwS6nRkTW/J1HjGd92cvvsUYHWQA7okC0XQzU+j8iB6hQ4YtW0PoIAuwThawsYH5ouB/4DMcoTfPF1h8izE68D/6BAEjXzLbd2bfheF3fC0wDajKIXTgdwLEF3pFZCdPKXyhK8OpuDoBoesSCB34nGBPgfPiNvBKIBS3oqbsPhim7qoN34c5uyB04HNUf4GI9gWvffxIgRvZZthOInVHRAd+xxoo8KCvZb4o+N/xyf3GsO9t2ZeOlVZB6MDnAZ36ey90q7PAnWwxfMnwP+wlMGiA0IGnhHpo9q4xijdex7TAX4JbE9th2JId0fVOCB34PaAPFjCyoeQA08LxbLFtI9NqrOzJuETm+yF04Cl6iMDLYg2vffTT5DIAAg==" width="16" height="16" style="display:block;pointer-events:none;"></button>
@@ -1105,6 +1128,11 @@
         </div>
 
       </div><!-- end #tritonet-app -->
+
+      <!-- ── Corner tab controls (positioned over the full-width row) ─────── -->
+      <button id="panel-toggle-btn" class="corner-tab-btn" onclick="toggleGuiPanel()" title="Control Panel">Panel</button>
+      <div id="chord-display-tab">—</div>
+      <button id="tutor-toggle-btn" class="corner-tab-btn" onclick="toggleTutor()" title="AI Teacher">AI</button>
 
       <!-- Backdrop (click to close tutor panel) -->
       <div id="tutor-backdrop" onclick="toggleTutor()"></div>
@@ -2319,7 +2347,7 @@ let mindsetsignal = false;
 let notation = false;
 let credits = false;
 let visual = false;
-const CONTROL_PANEL_ACCESS_ENABLED = false;
+const CONTROL_PANEL_ACCESS_ENABLED = true;
 const OSC_ENABLED = false;
 let chooserGUI = 4;
 let chooserpreGUI = 4;
@@ -7620,7 +7648,7 @@ window.addEventListener('beforeunload', function () {
 });
 </script>
 
-  <!-- AI Tutor toggle -->
+  <!-- Corner tab button logic -->
   <script>
     function toggleTutor() {
       const panel    = document.getElementById('teacher-panel');
@@ -7630,6 +7658,13 @@ window.addEventListener('beforeunload', function () {
       backdrop.classList.toggle('open', isOpen);
       btn.classList.toggle('open', isOpen);
       btn.textContent = isOpen ? '✕ AI' : 'AI';
+    }
+
+    function toggleGuiPanel() {
+      if (typeof visual === 'undefined') return;
+      visual = !visual;
+      const btn = document.getElementById('panel-toggle-btn');
+      if (btn) btn.classList.toggle('active', visual);
     }
   </script>
 
@@ -8377,6 +8412,13 @@ window.addEventListener('beforeunload', function () {
       }
 
       updateScaleRow();
+
+      // Chord symbol display (top-centre of main row)
+      var chordEl = document.getElementById('chord-display-tab');
+      if (chordEl) {
+        var cn = (typeof ChordName !== 'undefined' && ChordName) ? ChordName.trim() : '—';
+        if (chordEl.textContent !== cn) chordEl.textContent = cn;
+      }
     }
 
     window.addEventListener('load', function () {

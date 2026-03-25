@@ -52,9 +52,9 @@
       flex-direction: row;
       height: 734px;
       flex-shrink: 0;
-      position: relative;       /* anchor for absolutely-positioned corner buttons */
+      position: relative;       /* anchor for the AI toggle button */
       justify-content: center;  /* centre the 1100 px canvas */
-      background: #000;         /* background extends to full screen width */
+      background: #0a0a0a;      /* matches p5 background(10) so no side bars visible */
     }
 
     /* p5.js canvas host — fixed to match createCanvas(1100, 734) */
@@ -107,10 +107,11 @@
     }
     #tutor-backdrop.open { display: block; }
 
-    /* ====== CORNER TAB BUTTONS (float over the full-width main row) ======= */
-    .corner-tab-btn {
+    /* ====== AI TOGGLE BUTTON (top-right corner of the full-width row) ===== */
+    #tutor-toggle-btn {
       position: absolute;
       top: 10px;
+      right: 10px;
       z-index: 300;
       background: var(--panel-group-bg);
       border: 1px solid var(--panel-ctrl-border);
@@ -123,36 +124,12 @@
       opacity: 0.85;
       transition: background 0.15s, opacity 0.15s;
     }
-    .corner-tab-btn:hover { background: var(--panel-header-bg); opacity: 1; }
-    /* active (panel open) state — shared by .active and .open class variants */
-    .corner-tab-btn.active, .corner-tab-btn.open {
+    #tutor-toggle-btn:hover { background: var(--panel-header-bg); opacity: 1; }
+    #tutor-toggle-btn.open {
       background: var(--panel-ctrl-bg);
       color: #fff;
       box-shadow: 0 0 6px color-mix(in srgb, var(--panel-ctrl-bg) 70%, transparent);
       opacity: 1;
-    }
-    #panel-toggle-btn { left: 10px; }
-    #tutor-toggle-btn  { right: 10px; }
-
-    /* Chord symbol display — centred at the top of the full-width row */
-    #chord-display-tab {
-      position: absolute;
-      top: 7px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 300;
-      background: rgba(0,0,0,0.45);
-      border: 1px solid var(--panel-ctrl-border);
-      color: #e8e8e8;
-      padding: 2px 16px 3px;
-      border-radius: 3px;
-      font-size: 20px;
-      font-family: 'TritonetEmbedded', var(--panel-font);
-      min-width: 70px;
-      text-align: center;
-      opacity: 0.9;
-      pointer-events: none;
-      white-space: nowrap;
     }
     #teacher-panel-header {
       background: #c8c8c8;
@@ -1129,10 +1106,8 @@
 
       </div><!-- end #tritonet-app -->
 
-      <!-- ── Corner tab controls (positioned over the full-width row) ─────── -->
-      <button id="panel-toggle-btn" class="corner-tab-btn" onclick="toggleGuiPanel()" title="Control Panel">Panel</button>
-      <div id="chord-display-tab">—</div>
-      <button id="tutor-toggle-btn" class="corner-tab-btn" onclick="toggleTutor()" title="AI Teacher">AI</button>
+      <!-- AI toggle button (top-right of full-width row) -->
+      <button id="tutor-toggle-btn" onclick="toggleTutor()" title="AI Teacher">AI</button>
 
       <!-- Backdrop (click to close tutor panel) -->
       <div id="tutor-backdrop" onclick="toggleTutor()"></div>
@@ -2347,7 +2322,7 @@ let mindsetsignal = false;
 let notation = false;
 let credits = false;
 let visual = false;
-const CONTROL_PANEL_ACCESS_ENABLED = true;
+const CONTROL_PANEL_ACCESS_ENABLED = false;
 const OSC_ENABLED = false;
 let chooserGUI = 4;
 let chooserpreGUI = 4;
@@ -7648,7 +7623,7 @@ window.addEventListener('beforeunload', function () {
 });
 </script>
 
-  <!-- Corner tab button logic -->
+  <!-- AI Tutor toggle -->
   <script>
     function toggleTutor() {
       const panel    = document.getElementById('teacher-panel');
@@ -7658,13 +7633,6 @@ window.addEventListener('beforeunload', function () {
       backdrop.classList.toggle('open', isOpen);
       btn.classList.toggle('open', isOpen);
       btn.textContent = isOpen ? '✕ AI' : 'AI';
-    }
-
-    function toggleGuiPanel() {
-      if (typeof visual === 'undefined') return;
-      visual = !visual;
-      const btn = document.getElementById('panel-toggle-btn');
-      if (btn) btn.classList.toggle('active', visual);
     }
   </script>
 
@@ -8412,13 +8380,6 @@ window.addEventListener('beforeunload', function () {
       }
 
       updateScaleRow();
-
-      // Chord symbol display (top-centre of main row)
-      var chordEl = document.getElementById('chord-display-tab');
-      if (chordEl) {
-        var cn = (typeof ChordName !== 'undefined' && ChordName) ? ChordName.trim() : '—';
-        if (chordEl.textContent !== cn) chordEl.textContent = cn;
-      }
     }
 
     window.addEventListener('load', function () {

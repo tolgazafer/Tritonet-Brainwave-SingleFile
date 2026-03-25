@@ -8377,14 +8377,16 @@ window.addEventListener('beforeunload', function () {
       updateScaleRow();
     }
 
-    // Stretch canvas width to fill the screen; height stays fixed at 734 px.
-    // scaleX only — no height change so the layout below is unaffected.
-    // p5 mouse coords stay correct: p5 divides clientX by getBoundingClientRect().width.
+    // Scale the canvas proportionally to fill the full screen width.
+    // Both X and Y scale together so proportions are preserved.
+    // Row height follows the scaled canvas height so nothing overlaps below.
     function scaleTritonet() {
       var row = document.getElementById('tritonet-main-row');
       var app = document.getElementById('tritonet-app');
       if (!row || !app) return;
-      app.style.transform = 'scaleX(' + (row.offsetWidth / 1100) + ')';
+      var scale = row.offsetWidth / 1100;
+      app.style.transform = 'scale(' + scale + ')';
+      row.style.height = Math.round(734 * scale) + 'px';
     }
     window.addEventListener('resize', scaleTritonet);
 

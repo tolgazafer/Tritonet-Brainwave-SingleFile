@@ -52,19 +52,31 @@
       flex-direction: row;
       height: 734px;
       flex-shrink: 0;
-      position: relative;       /* anchor for the AI toggle button */
+      position: relative;       /* anchor for the AI toggle button and bg extender */
       justify-content: center;  /* centre the 1100 px canvas */
-      background: #0a0a0a;      /* matches p5 background(10) so no side bars visible */
+      background: #0a0a0a;      /* matches p5 background(10) */
+    }
+
+    /* Background image extended to full row width — same image & opacity as p5 */
+    #tritonet-bg-extend {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background-repeat: no-repeat;
+      background-size: auto 100%;
+      opacity: 0.59;            /* mirrors p5 tint(255,150): 150/255 ≈ 0.59 */
+      pointer-events: none;
     }
 
     /* p5.js canvas host — fixed to match createCanvas(1100, 734) */
     #tritonet-app {
       position: relative;
+      z-index: 1;
       width: 1100px;
       min-width: 1100px;
       height: 734px;
       overflow: hidden;
-      background: #000;
+      background: transparent;  /* let bg-extend show through the canvas edges */
       flex-shrink: 0;
       /* Contain the z-index stacking context so child z-indices (10,12,20)
          don't compete with #pattern-strip and #bottom-footer siblings. */
@@ -948,6 +960,9 @@
 <!-- /EMBEDDED ASSETS -->
   <div id="tritonet-shell">
     <div id="tritonet-main-row">
+
+      <!-- Background image extender — fills full row width behind the canvas -->
+      <div id="tritonet-bg-extend"></div>
 
       <!-- p5.js Canvas -->
       <div id="tritonet-app">
@@ -8382,8 +8397,23 @@ window.addEventListener('beforeunload', function () {
       updateScaleRow();
     }
 
+    // Extend the p5 BackgroundImg across the full row width.
+    // p5 draws it at image(BackgroundImg, -100, 0) inside the centred 1100px canvas,
+    // so its left edge in row coordinates = (rowWidth - 1100) / 2 - 100.
+    function applyBgExtend() {
+      var bgEl  = document.getElementById('tritonet-bg-extend');
+      var imgEl = document.getElementById('_img_BackgroundImg');
+      if (!bgEl || !imgEl || !imgEl.src) return;
+      var rowW  = document.getElementById('tritonet-main-row').offsetWidth;
+      var imgX  = Math.round((rowW - 1100) / 2 - 100);
+      bgEl.style.backgroundImage    = 'url(' + imgEl.src + ')';
+      bgEl.style.backgroundPosition = imgX + 'px 0px';
+    }
+
     window.addEventListener('load', function () {
       setInterval(updateStateInfo, 100);
+      applyBgExtend();
+      window.addEventListener('resize', applyBgExtend);
     });
   </script>
 

@@ -46,11 +46,11 @@
       overflow: hidden;
     }
 
-    /* Main row: full-width; JS sets height reactively via scaleTritonet() */
+    /* Main row: full-width; height stays 734 px so layout below is unaffected */
     #tritonet-main-row {
       display: flex;
       flex-direction: row;
-      height: 734px;            /* default; overridden by JS on every resize */
+      height: 734px;
       flex-shrink: 0;
       position: relative;       /* anchor for corner overlay buttons */
       background-color: #0a0a0a;
@@ -59,18 +59,16 @@
       background-position: center;
     }
 
-    /* p5.js canvas host — logical 1100×734; JS scales it to fill full width */
+    /* p5.js canvas host — logical 1100×734; JS applies scaleX to fill screen width */
     #tritonet-app {
       position: relative;
       z-index: 1;
       width: 1100px;
       height: 734px;
-      /* overflow: visible so the CSS-scaled visual content isn't clipped at the
-         1100 px layout box (overflow:hidden would clip transformed content). */
-      overflow: visible;
+      overflow: visible;        /* must be visible — overflow:hidden clips CSS-scaled content */
       background: transparent;  /* canvas uses clear(); row background shows through */
       flex-shrink: 0;
-      transform-origin: top left; /* scale expands to the right and downward */
+      transform-origin: top left; /* scaleX expands rightward from the left edge */
       isolation: isolate;
     }
     #tritonet-app canvas {
@@ -8379,15 +8377,14 @@ window.addEventListener('beforeunload', function () {
       updateScaleRow();
     }
 
-    // Scale the 1100×734 canvas to fill the full screen width, keeping aspect ratio.
-    // p5 mouse coords stay correct because p5 divides by getBoundingClientRect().width.
+    // Stretch canvas width to fill the screen; height stays fixed at 734 px.
+    // scaleX only — no height change so the layout below is unaffected.
+    // p5 mouse coords stay correct: p5 divides clientX by getBoundingClientRect().width.
     function scaleTritonet() {
       var row = document.getElementById('tritonet-main-row');
       var app = document.getElementById('tritonet-app');
       if (!row || !app) return;
-      var scale = row.offsetWidth / 1100;
-      app.style.transform = 'scale(' + scale + ')';
-      row.style.height = Math.round(734 * scale) + 'px';
+      app.style.transform = 'scaleX(' + (row.offsetWidth / 1100) + ')';
     }
     window.addEventListener('resize', scaleTritonet);
 

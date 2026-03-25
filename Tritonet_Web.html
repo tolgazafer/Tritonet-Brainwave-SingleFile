@@ -111,11 +111,9 @@
     }
     #tutor-backdrop.open { display: block; }
 
-    /* ====== AI TOGGLE BUTTON (top-right corner of the full-width row) ===== */
-    #tutor-toggle-btn {
+    /* ====== CORNER OVERLAY CONTROLS (all four corners of the full-width row) */
+    .corner-btn {
       position: absolute;
-      top: 10px;
-      right: 10px;
       z-index: 300;
       background: var(--panel-group-bg);
       border: 1px solid var(--panel-ctrl-border);
@@ -127,14 +125,26 @@
       font-family: var(--panel-font);
       opacity: 0.85;
       transition: background 0.15s, opacity 0.15s;
+      line-height: 1;
     }
-    #tutor-toggle-btn:hover { background: var(--panel-header-bg); opacity: 1; }
-    #tutor-toggle-btn.open {
+    .corner-btn:hover { background: var(--panel-header-bg); opacity: 1; }
+    .corner-btn.active, .corner-btn.open {
       background: var(--panel-ctrl-bg);
       color: #fff;
       box-shadow: 0 0 6px color-mix(in srgb, var(--panel-ctrl-bg) 70%, transparent);
       opacity: 1;
     }
+    /* Individual corner positions */
+    #panel-toggle-btn   { top: 10px;    left:  10px; }
+    #tutor-toggle-btn   { top: 10px;    right: 10px; }
+    #chord-display-tab  { bottom: 10px; left:  10px; pointer-events: none;
+                          font-family: 'TritonetEmbedded', var(--panel-font);
+                          font-size: 20px; background: rgba(0,0,0,0.25);
+                          border-color: transparent; color: #e8e8e8;
+                          white-space: nowrap; letter-spacing: 0.02em;
+                          padding: 3px 14px; }
+    #look-switcher-wrapper { bottom: 10px; right: 10px;
+                             position: absolute; z-index: 300; width: 140px; }
     #teacher-panel-header {
       background: #c8c8c8;
       padding: 16px 12px 8px;
@@ -1086,16 +1096,6 @@
           <select id="main-midiout-select"></select>
         </div>
 
-        <!-- View / Look Switcher -->
-        <div id="look-switcher-wrapper">
-          <select id="look-select" onchange="setLook(this.value)">
-            <option value="simple">Abacus</option>
-            <option value="calculator">Calculator</option>
-            <option value="zodiac">Mundana</option>
-            <option value="test1">Test 1</option>
-          </select>
-        </div>
-
         <!-- OSC Message Box -->
         <div id="osc-messagebox">
           <div>OSC IP (e.g. 10.1.1.240)</div>
@@ -1110,8 +1110,22 @@
 
       </div><!-- end #tritonet-app -->
 
-      <!-- AI toggle button (top-right of full-width row) -->
-      <button id="tutor-toggle-btn" onclick="toggleTutor()" title="AI Teacher">AI</button>
+      <!-- ── Four corner controls over the full-width row ───────────────── -->
+      <!-- Top-left: Side panel -->
+      <button id="panel-toggle-btn" class="corner-btn" onclick="toggleGuiPanel()" title="Control Panel">Panel</button>
+      <!-- Top-right: AI Teacher -->
+      <button id="tutor-toggle-btn"  class="corner-btn" onclick="toggleTutor()"    title="AI Teacher">AI</button>
+      <!-- Bottom-left: Chord symbol (read-only, updated by JS) -->
+      <div id="chord-display-tab" class="corner-btn">—</div>
+      <!-- Bottom-right: View / Look selector -->
+      <div id="look-switcher-wrapper">
+        <select id="look-select" onchange="setLook(this.value)">
+          <option value="simple">Abacus</option>
+          <option value="calculator">Calculator</option>
+          <option value="zodiac">Mundana</option>
+          <option value="test1">Test 1</option>
+        </select>
+      </div>
 
       <!-- Backdrop (click to close tutor panel) -->
       <div id="tutor-backdrop" onclick="toggleTutor()"></div>
@@ -2326,7 +2340,7 @@ let mindsetsignal = false;
 let notation = false;
 let credits = false;
 let visual = false;
-const CONTROL_PANEL_ACCESS_ENABLED = false;
+const CONTROL_PANEL_ACCESS_ENABLED = true;
 const OSC_ENABLED = false;
 let chooserGUI = 4;
 let chooserpreGUI = 4;
@@ -5962,24 +5976,7 @@ function draw() {
 
     Notation_display();
 
-    // Chord name — bottom-left, only when side panel is hidden
-    if (!screenswitch && ChordName) {
-      push();
-      textFont(TritonetFont);
-      textSize(screensize / 10);
-      textAlign(LEFT, BOTTOM);
-      noStroke();
-      const chordNotesActive = (typeof internalVoices !== 'undefined' && internalVoices.size > 0);
-      if (currentLook === 'simple') {
-        fill(55);
-      } else if (zodiacvisual) {
-        fill(chordNotesActive ? color(140, 185, 225) : color(35, 75, 150));
-      } else {
-        fill(DefaultColor1);
-      }
-      text(ChordName.replace(/\s+/g, ''), -simplescreen + 20, height - 20);
-      pop();
-    }
+    // Chord name is now shown as an HTML overlay (#chord-display-tab) outside the canvas.
 
     pop(); // end simplescreen translate
     positionMainMidiOutDropdown();
@@ -7621,7 +7618,7 @@ window.addEventListener('beforeunload', function () {
 });
 </script>
 
-  <!-- AI Tutor toggle -->
+  <!-- Corner control logic -->
   <script>
     function toggleTutor() {
       const panel    = document.getElementById('teacher-panel');
@@ -7631,6 +7628,13 @@ window.addEventListener('beforeunload', function () {
       backdrop.classList.toggle('open', isOpen);
       btn.classList.toggle('open', isOpen);
       btn.textContent = isOpen ? '✕ AI' : 'AI';
+    }
+
+    function toggleGuiPanel() {
+      if (typeof visual === 'undefined') return;
+      visual = !visual;
+      const btn = document.getElementById('panel-toggle-btn');
+      if (btn) btn.classList.toggle('active', visual);
     }
   </script>
 
@@ -8378,6 +8382,13 @@ window.addEventListener('beforeunload', function () {
       }
 
       updateScaleRow();
+
+      // Bottom-left chord symbol overlay
+      var chordEl = document.getElementById('chord-display-tab');
+      if (chordEl) {
+        var cn = (typeof ChordName !== 'undefined' && ChordName) ? ChordName.trim() : '—';
+        if (chordEl.textContent !== cn) chordEl.textContent = cn;
+      }
     }
 
     window.addEventListener('load', function () {

@@ -46,32 +46,31 @@
       overflow: hidden;
     }
 
-    /* Main row: full-width, canvas centred inside */
+    /* Main row: full-width; JS sets height reactively via scaleTritonet() */
     #tritonet-main-row {
       display: flex;
       flex-direction: row;
-      height: 734px;
+      height: 734px;            /* default; overridden by JS on every resize */
       flex-shrink: 0;
-      position: relative;         /* anchor for the AI toggle button */
-      justify-content: center;    /* centre the 1100 px canvas */
+      position: relative;       /* anchor for corner overlay buttons */
       background-color: #0a0a0a;
-      background-size: cover;     /* JS will set background-image from embedded asset */
+      background-size: cover;   /* JS sets background-image from embedded asset */
       background-repeat: no-repeat;
       background-position: center;
     }
 
-    /* p5.js canvas host — fixed to match createCanvas(1100, 734) */
+    /* p5.js canvas host — logical 1100×734; JS scales it to fill full width */
     #tritonet-app {
       position: relative;
       z-index: 1;
       width: 1100px;
-      min-width: 1100px;
       height: 734px;
-      overflow: hidden;
-      background: transparent;  /* canvas uses clear(); CSS background shows through */
+      /* overflow: visible so the CSS-scaled visual content isn't clipped at the
+         1100 px layout box (overflow:hidden would clip transformed content). */
+      overflow: visible;
+      background: transparent;  /* canvas uses clear(); row background shows through */
       flex-shrink: 0;
-      /* Contain the z-index stacking context so child z-indices (10,12,20)
-         don't compete with #pattern-strip and #bottom-footer siblings. */
+      transform-origin: top left; /* scale expands to the right and downward */
       isolation: isolate;
     }
     #tritonet-app canvas {
@@ -111,9 +110,11 @@
     }
     #tutor-backdrop.open { display: block; }
 
-    /* ====== CORNER OVERLAY CONTROLS (all four corners of the full-width row) */
-    .corner-btn {
+    /* ====== AI TOGGLE BUTTON (top-right corner of the full-width row) ===== */
+    #tutor-toggle-btn {
       position: absolute;
+      top: 10px;
+      right: 10px;
       z-index: 300;
       background: var(--panel-group-bg);
       border: 1px solid var(--panel-ctrl-border);
@@ -125,26 +126,14 @@
       font-family: var(--panel-font);
       opacity: 0.85;
       transition: background 0.15s, opacity 0.15s;
-      line-height: 1;
     }
-    .corner-btn:hover { background: var(--panel-header-bg); opacity: 1; }
-    .corner-btn.active, .corner-btn.open {
+    #tutor-toggle-btn:hover { background: var(--panel-header-bg); opacity: 1; }
+    #tutor-toggle-btn.open {
       background: var(--panel-ctrl-bg);
       color: #fff;
       box-shadow: 0 0 6px color-mix(in srgb, var(--panel-ctrl-bg) 70%, transparent);
       opacity: 1;
     }
-    /* Individual corner positions */
-    #panel-toggle-btn   { top: 10px;    left:  10px; }
-    #tutor-toggle-btn   { top: 10px;    right: 10px; }
-    #chord-display-tab  { bottom: 10px; left:  10px; pointer-events: none;
-                          font-family: 'TritonetEmbedded', var(--panel-font);
-                          font-size: 20px; background: rgba(0,0,0,0.25);
-                          border-color: transparent; color: #e8e8e8;
-                          white-space: nowrap; letter-spacing: 0.02em;
-                          padding: 3px 14px; }
-    #look-switcher-wrapper { bottom: 10px; right: 10px;
-                             position: absolute; z-index: 300; width: 140px; }
     #teacher-panel-header {
       background: #c8c8c8;
       padding: 16px 12px 8px;
@@ -1096,6 +1085,16 @@
           <select id="main-midiout-select"></select>
         </div>
 
+        <!-- View / Look Switcher -->
+        <div id="look-switcher-wrapper">
+          <select id="look-select" onchange="setLook(this.value)">
+            <option value="simple">Abacus</option>
+            <option value="calculator">Calculator</option>
+            <option value="zodiac">Mundana</option>
+            <option value="test1">Test 1</option>
+          </select>
+        </div>
+
         <!-- OSC Message Box -->
         <div id="osc-messagebox">
           <div>OSC IP (e.g. 10.1.1.240)</div>
@@ -1110,22 +1109,8 @@
 
       </div><!-- end #tritonet-app -->
 
-      <!-- ── Four corner controls over the full-width row ───────────────── -->
-      <!-- Top-left: Side panel -->
-      <button id="panel-toggle-btn" class="corner-btn" onclick="toggleGuiPanel()" title="Control Panel">Panel</button>
-      <!-- Top-right: AI Teacher -->
-      <button id="tutor-toggle-btn"  class="corner-btn" onclick="toggleTutor()"    title="AI Teacher">AI</button>
-      <!-- Bottom-left: Chord symbol (read-only, updated by JS) -->
-      <div id="chord-display-tab" class="corner-btn">—</div>
-      <!-- Bottom-right: View / Look selector -->
-      <div id="look-switcher-wrapper">
-        <select id="look-select" onchange="setLook(this.value)">
-          <option value="simple">Abacus</option>
-          <option value="calculator">Calculator</option>
-          <option value="zodiac">Mundana</option>
-          <option value="test1">Test 1</option>
-        </select>
-      </div>
+      <!-- AI toggle button (top-right of full-width row) -->
+      <button id="tutor-toggle-btn" onclick="toggleTutor()" title="AI Teacher">AI</button>
 
       <!-- Backdrop (click to close tutor panel) -->
       <div id="tutor-backdrop" onclick="toggleTutor()"></div>
@@ -5976,7 +5961,24 @@ function draw() {
 
     Notation_display();
 
-    // Chord name is now shown as an HTML overlay (#chord-display-tab) outside the canvas.
+    // Chord name — bottom-left, only when side panel is hidden
+    if (!screenswitch && ChordName) {
+      push();
+      textFont(TritonetFont);
+      textSize(screensize / 10);
+      textAlign(LEFT, BOTTOM);
+      noStroke();
+      const chordNotesActive = (typeof internalVoices !== 'undefined' && internalVoices.size > 0);
+      if (currentLook === 'simple') {
+        fill(55);
+      } else if (zodiacvisual) {
+        fill(chordNotesActive ? color(140, 185, 225) : color(35, 75, 150));
+      } else {
+        fill(DefaultColor1);
+      }
+      text(ChordName.replace(/\s+/g, ''), -simplescreen + 20, height - 20);
+      pop();
+    }
 
     pop(); // end simplescreen translate
     positionMainMidiOutDropdown();
@@ -7618,7 +7620,7 @@ window.addEventListener('beforeunload', function () {
 });
 </script>
 
-  <!-- Corner control logic -->
+  <!-- AI Tutor toggle -->
   <script>
     function toggleTutor() {
       const panel    = document.getElementById('teacher-panel');
@@ -7628,13 +7630,6 @@ window.addEventListener('beforeunload', function () {
       backdrop.classList.toggle('open', isOpen);
       btn.classList.toggle('open', isOpen);
       btn.textContent = isOpen ? '✕ AI' : 'AI';
-    }
-
-    function toggleGuiPanel() {
-      if (typeof visual === 'undefined') return;
-      visual = !visual;
-      const btn = document.getElementById('panel-toggle-btn');
-      if (btn) btn.classList.toggle('active', visual);
     }
   </script>
 
@@ -8382,17 +8377,23 @@ window.addEventListener('beforeunload', function () {
       }
 
       updateScaleRow();
-
-      // Bottom-left chord symbol overlay
-      var chordEl = document.getElementById('chord-display-tab');
-      if (chordEl) {
-        var cn = (typeof ChordName !== 'undefined' && ChordName) ? ChordName.trim() : '—';
-        if (chordEl.textContent !== cn) chordEl.textContent = cn;
-      }
     }
+
+    // Scale the 1100×734 canvas to fill the full screen width, keeping aspect ratio.
+    // p5 mouse coords stay correct because p5 divides by getBoundingClientRect().width.
+    function scaleTritonet() {
+      var row = document.getElementById('tritonet-main-row');
+      var app = document.getElementById('tritonet-app');
+      if (!row || !app) return;
+      var scale = row.offsetWidth / 1100;
+      app.style.transform = 'scale(' + scale + ')';
+      row.style.height = Math.round(734 * scale) + 'px';
+    }
+    window.addEventListener('resize', scaleTritonet);
 
     window.addEventListener('load', function () {
       setInterval(updateStateInfo, 100);
+      scaleTritonet();
       // Apply BackgroundImg as a full-width CSS background (canvas is now transparent).
       var imgEl = document.getElementById('_img_BackgroundImg');
       if (imgEl && imgEl.src) {

@@ -52,20 +52,12 @@
       flex-direction: row;
       height: 734px;
       flex-shrink: 0;
-      position: relative;       /* anchor for the AI toggle button and bg extender */
-      justify-content: center;  /* centre the 1100 px canvas */
-      background: #0a0a0a;      /* matches p5 background(10) */
-    }
-
-    /* Background image extended to full row width — same image & opacity as p5 */
-    #tritonet-bg-extend {
-      position: absolute;
-      inset: 0;
-      z-index: 0;
+      position: relative;         /* anchor for the AI toggle button */
+      justify-content: center;    /* centre the 1100 px canvas */
+      background-color: #0a0a0a;
+      background-size: cover;     /* JS will set background-image from embedded asset */
       background-repeat: no-repeat;
-      background-size: auto 100%;
-      opacity: 0.59;            /* mirrors p5 tint(255,150): 150/255 ≈ 0.59 */
-      pointer-events: none;
+      background-position: center;
     }
 
     /* p5.js canvas host — fixed to match createCanvas(1100, 734) */
@@ -76,7 +68,7 @@
       min-width: 1100px;
       height: 734px;
       overflow: hidden;
-      background: transparent;  /* let bg-extend show through the canvas edges */
+      background: transparent;  /* canvas uses clear(); CSS background shows through */
       flex-shrink: 0;
       /* Contain the z-index stacking context so child z-indices (10,12,20)
          don't compete with #pattern-strip and #bottom-footer siblings. */
@@ -960,9 +952,6 @@
 <!-- /EMBEDDED ASSETS -->
   <div id="tritonet-shell">
     <div id="tritonet-main-row">
-
-      <!-- Background image extender — fills full row width behind the canvas -->
-      <div id="tritonet-bg-extend"></div>
 
       <!-- p5.js Canvas -->
       <div id="tritonet-app">
@@ -5639,7 +5628,9 @@ function draw() {
   // Always redraw (p5.js runs at 60fps)
   {
     deneme++;
-    background(10);
+    // Clear to transparent so the CSS background-image on #tritonet-main-row
+    // shows through the full screen width (BackgroundImg is now CSS-only).
+    clear();
 
     let radius = screensize / 2;
     Root = radius * 0.58;
@@ -5660,14 +5651,6 @@ function draw() {
 
     // Background
     if (!zodiacvisual) {
-      if (BackgroundImg) {
-        tint(255, 150);
-        push();
-        imageMode(CORNER);
-        image(BackgroundImg, -100, 0);
-        pop();
-        noTint();
-      }
       if (currentLook === 'calculator') {
         noStroke();
         fill(0, 0, 0, 75);
@@ -8397,23 +8380,14 @@ window.addEventListener('beforeunload', function () {
       updateScaleRow();
     }
 
-    // Extend the p5 BackgroundImg across the full row width.
-    // p5 draws it at image(BackgroundImg, -100, 0) inside the centred 1100px canvas,
-    // so its left edge in row coordinates = (rowWidth - 1100) / 2 - 100.
-    function applyBgExtend() {
-      var bgEl  = document.getElementById('tritonet-bg-extend');
-      var imgEl = document.getElementById('_img_BackgroundImg');
-      if (!bgEl || !imgEl || !imgEl.src) return;
-      var rowW  = document.getElementById('tritonet-main-row').offsetWidth;
-      var imgX  = Math.round((rowW - 1100) / 2 - 100);
-      bgEl.style.backgroundImage    = 'url(' + imgEl.src + ')';
-      bgEl.style.backgroundPosition = imgX + 'px 0px';
-    }
-
     window.addEventListener('load', function () {
       setInterval(updateStateInfo, 100);
-      applyBgExtend();
-      window.addEventListener('resize', applyBgExtend);
+      // Apply BackgroundImg as a full-width CSS background (canvas is now transparent).
+      var imgEl = document.getElementById('_img_BackgroundImg');
+      if (imgEl && imgEl.src) {
+        document.getElementById('tritonet-main-row').style.backgroundImage =
+          'url(' + imgEl.src + ')';
+      }
     });
   </script>
 
